@@ -1,0 +1,31 @@
+<mat-toolbar>
+  <mat-toolbar-row>
+    <button type="button" aria-label="Toggle sidenav" mat-icon-button (click)="drawer.toggle()" color="primary">
+      <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
+    </button>
+  </mat-toolbar-row>
+</mat-toolbar>
+<mat-sidenav-container class="app-container">
+  <mat-sidenav #drawer mode="side" role="navigation">
+  	<div class="user-details" *ngIf="user">
+  		<div class="user-visual">
+  			<div class="user-img"><img [src]="user.photoURL"></div>
+  			<div class="user-email">{{user.email}}</div>
+  		</div>
+  		<button mat-button (click)="logout()">Logout</button>
+  	</div>
+  	<div class="app-menu" *ngIf="user">
+  		<mat-nav-list>
+  			<mat-list-item>
+  				<mat-icon matListIcon>dashboard</mat-icon>
+  				<a routerLink="dashboard/statistics">Dashboard</a>
+  			</mat-list-item>
+  			<mat-list-item>
+  				<mat-icon matListIcon>question_answer</mat-icon>
+  				<a routerLink="questions">Questions</a>
+  			</mat-list-item>
+	    </mat-nav-list>
+  	</div>
+  </mat-sidenav>
+  <mat-sidenav-content><router-outlet></router-outlet></mat-sidenav-content>
+</mat-sidenav-container>

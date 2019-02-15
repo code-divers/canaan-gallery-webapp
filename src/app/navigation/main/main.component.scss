@@ -1,0 +1,35 @@
+@import '~@angular/material/theming';
+@import "~src/app/app-theme.scss";
+
+@mixin main() {
+	$user-panel-background: mat-color($app-primary, 100);
+	$user-panel-foreground: mat-color($app-primary, 700);
+
+	.app-container {
+		height: 100%;
+	}
+
+	mat-sidenav-content{
+		padding: 15px;	
+	}
+
+	.user-details {
+		padding: 10px;
+		color: $user-panel-foreground;
+		background: $user-panel-background;
+	}
+
+	.user-visual {
+		display: flex;
+		align-items: center;
+	}
+		
+	.user-img img {
+		width: 60px;
+		height: 60px;
+		margin: 5px;
+		border-radius: 50%;
+	}
+}
+
+@include main();
