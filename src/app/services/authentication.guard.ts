@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import { Observable } from 'rxjs';
+import {tap, take, map} from 'rxjs/operators';
 import { AuthenticationService } from './authentication.service';
-import { Router } from "@angular/router";
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
@@ -14,21 +15,22 @@ export class AuthenticationGuard implements CanActivate {
 
   canActivate(
     next: ActivatedRouteSnapshot,
-    state: RouterStateSnapshot): boolean {
-    let url: string = state.url;
-
-    return this.checkLogin(url);
+    state: RouterStateSnapshot): Observable<boolean>  {
+    return this.authService.user.pipe(
+      map(user => user != null),
+      take(1),
+      tap(allowed => {
+        console.log('allowed:', allowed);
+        if (!allowed) {
+          this.router.navigate(['/login']);
+        }
+      })
+    );
   }
 
   canActivateChild(
     route: ActivatedRouteSnapshot,
-    state: RouterStateSnapshot): boolean {
+    state: RouterStateSnapshot): Observable<boolean> {
     return this.canActivate(route, state);
-  }
-
-  checkLogin(url: string): boolean {
-    if (this.authService.isLoggedIn()) { return true; }
-    this.router.navigate(['/login']);
-    return false;
   }
 }

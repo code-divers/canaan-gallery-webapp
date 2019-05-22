@@ -1,0 +1,27 @@
+<div class="action-container">
+  <button (click)="openLink(article.link)" mat-icon-button class="article-button">
+      <mat-icon aria-label="Article home">home</mat-icon>
+      {{ article.displayLink }}
+  </button>
+  <button *ngIf="article.links.length > 0" mat-icon-button class="article-button" [matMenuTriggerFor]="linksmenu">
+    <mat-icon aria-label="Links">link</mat-icon>
+    Links
+  </button>
+  <mat-menu #linksmenu="matMenu">
+    <button *ngFor="let link of article.links" mat-menu-item (click)="openLink(link.href)">{{link.text}}</button>
+  </mat-menu>
+  <button *ngIf="article.videos.length > 0" mat-icon-button class="article-button" [matMenuTriggerFor]="videosmenu">
+      <mat-icon aria-label="Videos">videocam</mat-icon>
+      Videos
+    </button>
+    <mat-menu #videosmenu="matMenu">
+      <button *ngFor="let video of article.videos" mat-menu-item (click)="openLink(video.src)">{{video.src}}</button>
+  </mat-menu>
+  <button *ngIf="article.author.length > 0" mat-icon-button class="article-button" [matMenuTriggerFor]="authorsmenu">
+      <mat-icon aria-label="Authors">create</mat-icon>
+      Authors
+    </button>
+    <mat-menu #authorsmenu="matMenu">
+      <button *ngFor="let author of article.author" mat-menu-item (click)="openLink(author)">{{author}}</button>
+    </mat-menu>
+</div>

@@ -1,0 +1,109 @@
+  <div>
+    <form [formGroup]="orderForm" (ngSubmit)="onSubmit()" class="form-container">
+      <div class="top-container">
+        <div formGroupName="customer" class="customer-container" [class.mat-elevation-z2]="true">
+          <h3 class="customer-title">Customer</h3>
+          <div class="side left">
+              <mat-form-field>
+                <input matInput [formControl]="filterCustomerInput" type="text" formControlName="name" placeholder="First name and Last name" [matAutocomplete]="customerNameAuto" required>
+                <mat-autocomplete #customerNameAuto="matAutocomplete" autoActiveFirstOption>
+                  <mat-option *ngFor="let customer of customers| async" [value]="customer" (onSelectionChange)="onCustomerSelect(customer)">
+                    {{ customer.name }}
+                  </mat-option>
+                </mat-autocomplete>
+              </mat-form-field>
+              <mat-form-field>
+                <input matInput type="text" formControlName="address" placeholder="Address" required>
+              </mat-form-field>
+              <mat-form-field>
+                <input matInput type="text" formControlName="city" placeholder="City" required>
+              </mat-form-field>
+              <mat-form-field>
+                <input matInput type="text" formControlName="country" placeholder="Country" required>
+              </mat-form-field>
+          </div>
+          <div class="side right">
+            <mat-form-field>
+              <input matInput type="tel" formControlName="phone" placeholder="Phone number" required>
+            </mat-form-field>
+            <mat-form-field>
+              <input matInput type="email" formControlName="email" placeholder="Email" required>
+            </mat-form-field>
+            <mat-form-field>
+                <input matInput type="text" formControlName="state" placeholder="State">
+            </mat-form-field>
+            <mat-form-field>
+              <input matInput type="text" formControlName="zipcode" placeholder="Zipcode" required>
+            </mat-form-field>
+          </div>
+        </div>
+        <div class="actions-container" [class.mat-elevation-z2]="true">
+            <div class="container-line">
+                {{ orderForm.get('created').value | date: 'dd/MM/yyyy HH:mm' }}
+            </div>
+            <mat-form-field>
+                <mat-label>Currency</mat-label>
+                <mat-select formControlName="currency" (selectionChange)="onCurrencyChange($event.value)" required>
+                    <mat-option *ngFor="let currency of currencies" [value]="currency">
+                        {{currency}}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+            <mat-checkbox formControlName="isExport">Export?</mat-checkbox>
+            <mat-form-field>
+              <mat-label>Shipping</mat-label>
+              <input matInput type="number" formControlName="shipping" placeholder="0">
+            </mat-form-field>
+            <div class="container-line">
+              <div>Price: {{orderForm.get('price').value | currency:orderForm.get('currency').value}}</div><div *ngIf="orderForm.get('discount').value > 0">{{orderForm.get('discountedPrice').value | currency:orderForm.get('currency').value}} ({{orderForm.get('discount').value | percent}} off)</div>
+              </div>
+            <div class="container-line">
+              Total: {{ orderForm.get('subtotal').value | currency:orderForm.get('currency').value }}
+            </div>
+            <button mat-raised-button type="submit" [disabled]="!orderForm.valid">Save</button>
+            <button mat-raised-button type="button" [matMenuTriggerFor]="actionMenu">Other actions</button>
+            <mat-menu #actionMenu="matMenu">
+              <button mat-menu-item>Add/Edit sketch</button>
+              <button mat-menu-item>Save to COMAX</button>
+              <button mat-menu-item>Set discount</button>
+              <button mat-menu-item>Print for customer</button>
+              <button mat-menu-item>Print shipping statement</button>
+            </mat-menu>
+        </div>
+      </div>
+      <div class="items-container" [class.mat-elevation-z2]="true">
+        <h3>Items</h3>
+        <mat-form-field>
+          <input matInput [formControl]="filterProductsInput" type="text" placeholder="Search products" [matAutocomplete]="productNameAuto">
+          <mat-autocomplete #productNameAuto="matAutocomplete" [displayWith]="productFilterResult" autoActiveFirstOption>
+            <mat-option *ngFor="let product of products| async" [value]="product" (onSelectionChange)="onProductSelect(product)">
+              {{ product.name }}
+            </mat-option>
+          </mat-autocomplete>
+        </mat-form-field>
+        <div>
+          <div *ngIf="orderForm.get('items').value.length == 0">No items in the list</div>
+          <mat-list formArrayName="items">
+            <mat-list-item class="item-row" *ngFor="let item of getItemsControls(); let i = index;" [formGroupName]="i">
+              <div class="items-line">
+                <button type="button" mat-icon-button (click)="removeItem(i)">
+                  <mat-icon aria-label="Delete item" matListIcon>delete</mat-icon>
+                </button>
+                <div class="item-name">{{item.get('name').value}}</div>
+                <div class="item-name">{{item.get('price').value | currency: orderForm.get('currency').value}}</div>
+                <mat-form-field class="item-quantity">
+                  <mat-label>quantity</mat-label>
+                  <input matInput type="number" formControlName="quantity" placeholder="0" size="2">
+                </mat-form-field>
+                <div class="item-details" *ngIf="item.get('details')">
+                  Atara: {{item.get('details').value.atara}}
+                  Corners: TR: {{item.get('details').value.corners.topLeft}}, TL:{{item.get('details').value.corners.topLeft}}, BL:{{item.get('details').value.corners.bottomLeft}}, BR:{{item.get('details').value.corners.bottomRight}}
+                </div>
+              </div>
+              <mat-divider></mat-divider>
+            </mat-list-item>
+          </mat-list>
+        </div>
+      </div>
+    </form>
+</div>

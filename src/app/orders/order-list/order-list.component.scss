@@ -1,0 +1,23 @@
+
+.actions-container {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+
+}
+
+.filter-input {
+    width: 60%;
+}
+
+.orders-list {
+    width: 100%;
+}
+
+.discounted {
+    text-decoration-line: line-through;
+}
+
+.selection {
+    cursor: pointer;
+}

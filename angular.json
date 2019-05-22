@@ -3,11 +3,11 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "mapa-webapp": {
+    "canaan-gallery-orders": {
       "root": "",
       "sourceRoot": "src",
       "projectType": "application",
-      "prefix": "mapa",
+      "prefix": "",
       "schematics": {
         "@schematics/angular:component": {
           "styleext": "scss"
@@ -17,7 +17,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "outputPath": "dist/mapa-webapp",
+            "outputPath": "dist/canaan-gallery-orders",
             "index": "src/index.html",
             "main": "src/main.ts",
             "polyfills": "src/polyfills.ts",
@@ -62,18 +62,18 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "mapa-webapp:build"
+            "browserTarget": "canaan-gallery-orders:build"
           },
           "configurations": {
             "production": {
-              "browserTarget": "mapa-webapp:build:production"
+              "browserTarget": "canaan-gallery-orders:build:production"
             }
           }
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "mapa-webapp:build"
+            "browserTarget": "canaan-gallery-orders:build"
           }
         },
         "test": {
@@ -108,7 +108,7 @@
         }
       }
     },
-    "mapa-webapp-e2e": {
+    "canaan-gallery-orders-e2e": {
       "root": "e2e/",
       "projectType": "application",
       "prefix": "",
@@ -117,11 +117,11 @@
           "builder": "@angular-devkit/build-angular:protractor",
           "options": {
             "protractorConfig": "e2e/protractor.conf.js",
-            "devServerTarget": "mapa-webapp:serve"
+            "devServerTarget": "canaan-gallery-orders:serve"
           },
           "configurations": {
             "production": {
-              "devServerTarget": "mapa-webapp:serve:production"
+              "devServerTarget": "canaan-gallery-orders:serve:production"
             }
           }
         },
@@ -137,5 +137,5 @@
       }
     }
   },
-  "defaultProject": "mapa-webapp"
+  "defaultProject": "canaan-gallery-orders"
 }

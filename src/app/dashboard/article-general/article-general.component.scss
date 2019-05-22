@@ -1,0 +1,17 @@
+.line {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.container {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 15px;
+}
+
+.caption {
+    padding-right: 10px;
+    font-weight: bold;
+}

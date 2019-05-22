@@ -1,0 +1,42 @@
+<div class="filter-pane">
+    <mat-form-field>
+        <mat-select [value]="selectedLanguage" placeholder="Language" (selectionChange)="onLanguageChange($event)">
+            <mat-option *ngFor="let lang of languages" [value]="lang">{{lang | uppercase }}</mat-option>
+          </mat-select>
+    </mat-form-field>
+    <mat-form-field class="filter-input-container">
+      <mat-label>Filter questions</mat-label>
+      <input #filter (keyup.enter)="onFilterKey(filter.value)" matInput placeholder="Input search text and press Enter">
+    </mat-form-field>
+</div>
+<div class="list-pane">
+    <mat-accordion>
+        <mat-spinner *ngIf="!questions"></mat-spinner>
+        <mat-expansion-panel (opened)="loadResults(question)" *ngFor="let question of questions">
+          <mat-expansion-panel-header>
+            {{ question.query | titlecase }}
+          </mat-expansion-panel-header>
+          <ng-template matExpansionPanelContent>
+            <mat-spinner *ngIf="!question.results"></mat-spinner>
+            <mat-card class="article-card" *ngFor="let article of question.results">
+              <mat-card-title-group>
+                  <mat-card-title (click)="openLink(article.link)">{{ article.title | titlecase }}</mat-card-title>
+                  <mat-card-subtitle>{{ article.description | titlecase }}
+                  </mat-card-subtitle>
+                  <img class="article-image" mat-card-sm-image [src]="article.image">
+              </mat-card-title-group>
+              <mat-tab-group dynamicHeight="true">
+                <mat-tab label="General">
+                    <article-general [article]="article"></article-general>
+                </mat-tab>
+                <mat-tab label="Key Phrases"> Soon... </mat-tab>
+                <mat-tab label="Entities"> Soon... </mat-tab>
+              </mat-tab-group>
+              <mat-card-actions align="start">
+                <article-actions [article]="article"></article-actions>
+              </mat-card-actions>
+            </mat-card>
+          </ng-template>
+        </mat-expansion-panel>
+      </mat-accordion>
+</div>

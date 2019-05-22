@@ -1,11 +1,13 @@
 export const environment = {
-	production: true,
-	firebase: {
-		apiKey: "AIzaSyB2W-Z2tjBambAGZ-awf4-7mulp5t3f06c",
-		authDomain: "mapa-webapp-1547047945754.firebaseapp.com",
-		databaseURL: "https://mapa-webapp-1547047945754.firebaseio.com",
-		projectId: "mapa-webapp-1547047945754",
-		storageBucket: "mapa-webapp-1547047945754.appspot.com",
-		messagingSenderId: "684989752299"
-	}
+ production: true,
+ serverApi: 'https://s77a6xrvk7.execute-api.us-east-1.amazonaws.com/v3',
+ firebase: {
+    apiKey: "AIzaSyDQ2hMUp0DVgcw1BZXe61wlx_sOCTNawdk",
+    authDomain: "canaan-gallery.firebaseapp.com",
+    databaseURL: "https://canaan-gallery.firebaseio.com",
+    projectId: "canaan-gallery",
+    storageBucket: "canaan-gallery.appspot.com",
+    messagingSenderId: "117308682586",
+    appId: "1:117308682586:web:2f7175ce872ce082"
+  }
 };

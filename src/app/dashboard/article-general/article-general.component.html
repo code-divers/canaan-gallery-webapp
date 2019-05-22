@@ -1,0 +1,14 @@
+<div class="container">
+    <div class="line" *ngIf="article.date"><div class="caption">Date: </div> {{article.date}}</div>
+    <div class="line" *ngIf="article.publisher"><div class="caption">Publisher: </div> {{article.publisher}}</div>
+    <div class="line" *ngIf="article.copyright"><div class="caption">Copyright:</div>{{article.copyright}}</div>
+    <div class="line">
+        <div class="caption">Tags: </div>
+        <div *ngIf="article.tags.length == 0">No tags found</div>
+        <div>
+            <mat-chip-list>
+                <mat-chip *ngFor="let tag of article.tags">{{ tag }}</mat-chip>
+            </mat-chip-list>
+        </div>
+    </div>
+</div>

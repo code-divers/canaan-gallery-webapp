@@ -1,0 +1,103 @@
+.form-container {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.top-container {
+    flex-basis: 100%;
+    display: flex;
+    flex-wrap: nowrap;
+}
+
+.customer-container {
+    display: flex;
+    flex-wrap: wrap;
+    flex-basis: 70%;
+    padding: 1em;
+    margin: 1em;
+}
+
+.customer-title {
+    width: 100%;
+    flex-basis: 100%;
+}
+
+.actions-title {
+    width: 100%;
+    flex-basis: 100%;
+}
+
+.customer-container .side {
+    display: flex;
+    flex-basis: 48%;
+    flex-wrap: wrap;
+}
+
+.customer-container .left {
+    margin-right: 1em;
+}
+
+.customer-container mat-form-field {
+    flex-basis: 100%;
+}
+
+.actions-container {
+    display: flex;
+    flex-wrap: wrap;
+    flex-basis: 30%;
+    align-items: center;
+    padding: 1em;
+    margin: 1em;
+}
+
+.container-line {
+    flex-basis: 100%;
+    display: flex;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+.actions-container button {
+    flex-basis: 100%;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    align-self: center;
+}
+
+.actions-container mat-checkbox {
+    margin-left: 1em; 
+}
+
+.items-container {
+    flex-basis: 100%;
+    padding: 1em;
+    margin: 1em;
+}
+
+.items-line {
+    flex-basis: 80%;
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.item-row {
+    padding-top: 0.5em;
+    margin-top: 0.5em;
+    padding-bottom: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+.item-name {
+    margin: 2em;
+    flex-basis: 25%;
+}
+
+.item-price {
+    margin: 2em;
+}
+
+.item-quantity {
+    margin: 2em;
+}

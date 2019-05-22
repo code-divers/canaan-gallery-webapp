@@ -5,6 +5,10 @@
 	$user-panel-background: mat-color($app-primary, 100);
 	$user-panel-foreground: mat-color($app-primary, 700);
 
+	.logo {
+		width: 60px;
+		margin: 5px;
+	}
 	.app-container {
 		height: 100%;
 	}
