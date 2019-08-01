@@ -1,0 +1,47 @@
+/** Setting margins */       
+@page { margin: 2cm }
+
+@media screen {
+  :host {
+    display: none;
+  }
+}
+
+@media print {
+    .header { 
+        width: 100%;
+    }
+    
+    .header-content {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .content {
+        width: 100%;
+        display: flex;
+    }
+
+    .content-container {
+        margin: 1em;
+    }
+
+    .logo {
+        margin: 1em;
+        width: 100px;
+    }
+
+    .address-container {
+        display: flex;
+        flex-wrap: nowrap;
+    }
+
+    .address-text {
+        margin: 1em;
+    }
+
+    .divider {
+        margin: 0.1em;
+    }
+}

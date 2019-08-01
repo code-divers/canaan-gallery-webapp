@@ -1,0 +1,37 @@
+<div class="order-container" *ngIf="order!=null">
+  <div class="head-container">
+      <div class="customer-details">
+        <h3>SOLD TO:</h3>
+        <div>{{ order.customer.name | titlecase }}</div>
+        <div>{{ order.customer.address | titlecase}}, {{ order.customer.city | titlecase }}, {{ order.customer.zip }}</div>
+        <div>{{ order.customer.country | titlecase }}</div>
+        <div>Phone: {{ order.customer.phone }}</div>
+        <div>Email: {{ order.customer.email }}</div>
+      </div>
+      <div class="order-details">
+        <div>{{order.created.toDate() | date: 'dd/MM/yyyy HH:mm'}}</div>
+        <div>Order #{{order.comaxDocNumber}}</div>
+      </div>
+  </div>
+  <div class="items-container">
+    <div class="item" *ngFor="let item of order.items">
+      <div class="item-line">
+          <div class="item-quantity">{{ item.quantity }}</div>
+          <div class="item-name">{{ item.name }}</div>
+          <div class="item-price">{{ item.price | currency: order.customer.currency : 'symbol' : '1.0'}}</div>
+      </div>
+      <mat-divider class="item-divider"></mat-divider>
+    </div>
+  </div>
+  <div class="footer-container">
+    <div>
+        <div >Thank you for placing your order with us.<br>We hope to see you again</div>
+        <div>Dear client please note:<br>Your order will be hand wovan especially for you, it will take 40 days until you recive it to your home.</div>
+    </div>
+    <div class="order-summary">
+      <div>SUBTOTAL: {{ order.price | currency: order.customer.currency : 'symbol' : '1.0'  }}</div>
+      <div>SHIPPING: {{ order.shipping | currency: order.customer.currency : 'symbol' : '1.0'  }}</div>
+      <div>TOTAL PRICE: {{ order.subtotal | currency: order.customer.currency : 'symbol' : '1.0'  }}</div>
+    </div>
+  </div>
+</div>

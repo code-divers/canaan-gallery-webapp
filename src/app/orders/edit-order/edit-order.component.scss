@@ -43,16 +43,16 @@
 
 .actions-container {
     display: flex;
-    flex-direction: column;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     flex-basis: 30%;
+    align-items: center;
     padding: 1em;
     margin: 1em;
 }
 
 .container-line {
+    flex-basis: 100%;
     display: flex;
-    flex-wrap: nowrap;
     margin-top: 0.5em;
     margin-bottom: 0.5em;
 }
@@ -81,10 +81,6 @@
 .filter-product {
     display: flex;
     flex-wrap: nowrap;
-}
-
-.product-sub {
-    font-size: 80%;
 }
 
 .items-line {
@@ -139,6 +135,7 @@
 
 .spinner-container {
     width:100%;
+    height: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -147,6 +144,7 @@
 
 .spinner-message-container {
     width: 300px;
+    height: 100%;
     display: flex;
     justify-content: center;
     align-items: center;

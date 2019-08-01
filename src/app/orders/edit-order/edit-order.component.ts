@@ -1,49 +1,51 @@
 import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormControl, FormArray, FormBuilder, Validators, FormGroup } from '@angular/forms';
-import { AngularFirestore, AngularFirestoreCollection } from '@angular/fire/firestore';
+import { AngularFirestore, AngularFirestoreCollection, AngularFirestoreDocument } from '@angular/fire/firestore';
 import { AngularFireFunctions } from '@angular/fire/functions';
 import { Observable, BehaviorSubject, combineLatest, of } from 'rxjs';
-import { IOrder, ICustomer, IProduct, IOrderItem } from '../order-interface';
-import { switchMap, map, catchError, } from 'rxjs/operators';
+import { IOrder, IOrderItem, ICustomer, IProduct, IProductGroup } from '../order-interface';
+import { switchMap, map, catchError } from 'rxjs/operators';
 import { MatDialog } from '@angular/material';
 import { MatAutocomplete, MatAutocompleteTrigger, MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { ItemDetailsComponent } from '../item-details/item-details.component';
 import { ICurrency } from '../../services/currency-api.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { CustomersDataProviderService } from '../../services/customers-data-provider.service';
 import { ProductsDataProviderService } from '../../services/products-data-provider.service';
-import { environment } from 'src/environments/environment';
-
+import { environment } from 'src/environments/environment.prod';
 
 @Component({
-  selector: 'canaan-new-order',
-  templateUrl: './new-order.component.html',
-  styleUrls: ['./new-order.component.scss']
+  selector: 'canaan-edit-order',
+  templateUrl: './edit-order.component.html',
+  styleUrls: ['./edit-order.component.scss']
 })
-export class NewOrderComponent implements OnInit {
+export class EditOrderComponent implements OnInit {
   currency: ICurrency;
   currencies: ICurrency[];
+  orderId;
+  orderDoc: AngularFirestoreDocument<IOrder>;
+  order: Observable<IOrder>;
   ordersCollection: AngularFirestoreCollection<IOrder>;
   orders: Observable<IOrder[]>;
-  isOrderLoading: BehaviorSubject<boolean> = new BehaviorSubject(false);
+  isOrderLoading: BehaviorSubject<boolean> = new BehaviorSubject(true);
   orderLoding: boolean;
 
   filterCustomerInput: FormControl = new FormControl();
   filterProductsInput: FormControl = new FormControl();
   orderForm: FormGroup;
 
-  customersCollection: AngularFirestoreCollection<IOrder>;
   customers: Observable<ICustomer[]>;
   isCustomersLoading: BehaviorSubject<boolean> = new BehaviorSubject(false);
   customerFilter: BehaviorSubject<string|null>;
 
   shipping: IProduct;
+  productGroups: Observable<IProductGroup[]>;
+  selectedProductGroup: string = null;
   products: Observable<IProduct[]>;
   isProductsLoading: BehaviorSubject<boolean> = new BehaviorSubject(false);
   productsFilter: BehaviorSubject<string|null>;
-
   discountedPrice = 0;
+
   selectedCustomer = null;
   @ViewChild('customerNameInput') customerNameInput: ElementRef<HTMLInputElement>;
   @ViewChild('customerNameAuto') customerNameAuto: MatAutocomplete;
@@ -59,7 +61,6 @@ export class NewOrderComponent implements OnInit {
     private router: Router,
     private activatedRoute: ActivatedRoute,
     private snackBar: MatSnackBar,
-    private customerDataProvider: CustomersDataProviderService,
     private productsDataprovider: ProductsDataProviderService) {
 
   }
@@ -72,41 +73,27 @@ export class NewOrderComponent implements OnInit {
       });
       this.shipping = res.sres;
     });
-
-    this.ordersCollection = this.afs.collection<IOrder>('orders');
-    this.orders = this.ordersCollection.valueChanges();
     this.isOrderLoading.subscribe((value) => {
       this.orderLoding = value;
     });
-    this.customersCollection = this.afs.collection<IOrder>('customers');
-    this.customerFilter = new BehaviorSubject(null);
-    this.customers = combineLatest(this.customerFilter).pipe(switchMap(([name]) => {
-      if (!name) {
-        return of([]);
-      }
-      const customers = this.customerDataProvider.search(name);
-      return of(customers);
-    }));
-
-    this.productsFilter = new BehaviorSubject(null);
-    this.products = combineLatest(this.productsFilter).pipe(switchMap(([name]) => {
-      if (!name) {
-        return of([]);
-      }
-      const products = this.productsDataprovider.search(name);
-      return of(products);
-    }));
-
+    const id = this.activatedRoute.snapshot.paramMap.get('id');
+    this.orderDoc = this.afs.doc<IOrder>(`orders/${id}`);
+    this.order = this.orderDoc.valueChanges();
+    this.ordersCollection = this.afs.collection<IOrder>('orders');
+    this.orders = this.ordersCollection.valueChanges();
+    
     this.orderForm = this.fb.group({
+      comaxDocNumber: [null],
       created: [new Date()],
       discount: [0],
       isEditDiscount: [false],
+      discountedPrice: [0],
       shipping: [0],
       price: [0],
       subtotal: [0],
       customer: this.fb.group({
         id: [null],
-        name: ['', Validators.required],
+        name: [''],
         address: [''],
         city: [''],
         state: [''],
@@ -119,7 +106,39 @@ export class NewOrderComponent implements OnInit {
       }),
       items: this.fb.array([])
     });
+    
+    this.order.subscribe((result: IOrder) => {
+      this.orderId = result.comaxDocNumber || id;
+      if (result.created) {
+        result.created = result.created.toDate();
+      }
+      this.orderForm.patchValue(result);
+      for (const item of result.items) {
+        const formGroupItem = this.createFormGroupItem(item);
+        this.addItem(formGroupItem);
+      }
+      this.selectedCustomer = result.customer;
+      this.subscribeToOrder();
+      this.isOrderLoading.next(false);
+    });
 
+    this.productsFilter = new BehaviorSubject(null);
+    this.products = combineLatest(this.productsFilter).pipe(switchMap(([name]) => {
+      if (!name) {
+        return of([]);
+      }
+      const products = this.productsDataprovider.search(name);
+      return of(products);
+    }));
+
+    this.filterProductsInput.valueChanges.subscribe((query) => {
+      if (typeof query === 'string') {
+        this.productsFilter.next(query);
+      }
+    });
+  }
+
+  subscribeToOrder() {
     this.orderForm.get('shipping').valueChanges.subscribe((shipping) => {
       const price = this.orderForm.get('price').value;
       const subtotal = price + shipping;
@@ -162,49 +181,6 @@ export class NewOrderComponent implements OnInit {
       this.orderForm.patchValue({
         price: price
       });
-    });
-
-    this.filterCustomerInput.valueChanges.subscribe((query) => {
-      if (typeof query === 'string') {
-        this.customerFilter.next(query);
-        (<FormGroup>this.orderForm.get('customer')).patchValue({
-          name: query
-        });
-      }
-    });
-
-    this.filterProductsInput.valueChanges.subscribe((query) => {
-      if (typeof query === 'string') {
-        this.productsFilter.next(query);
-      }
-    });
-  }
-
-  onCustomerSelect($event: MatAutocompleteSelectedEvent) {
-    const customer = $event.option.value;
-    this.orderForm.patchValue({
-      customer: customer
-    });
-    this.selectedCustomer = customer;
-    this.customerNameInput.nativeElement.value = '';
-  }
-
-  removeCustomer() {
-    this.selectedCustomer = null;
-    this.orderForm.patchValue({
-      customer: {
-        id: null,
-        name: '',
-        address: '',
-        city: '',
-        state: '',
-        country: '',
-        phone: '',
-        email: '',
-        zipcode: '',
-        currency: '',
-        isExport: false
-      }
     });
   }
 
@@ -309,12 +285,31 @@ export class NewOrderComponent implements OnInit {
   }
 
   productFilterResult(value) {
-    return null;
+    return '';
   }
 
   addItem(item) {
     const items = this.orderForm.get('items') as FormArray;
     items.push(item);
+  }
+
+  createFormGroupItem(item: IOrderItem){
+    const formGroup: FormGroup = this.fb.group({
+      id: [item.id],
+      name: [item.name],
+      price: [item.price],
+      discountedPrice: [item.discountedPrice],
+      discount: [item.discount],
+      isEditDiscount: [false],
+      quantity: [item.quantity],
+      group: [item.group],
+      details: this.fb.group({})
+    });
+    if (item.details) {
+      this.addItemDetails(formGroup, item.details);
+    }
+    this.subscribeItem(formGroup, item);
+    return formGroup;
   }
 
   createItem(product: IProduct, details: any = null) {
@@ -330,7 +325,14 @@ export class NewOrderComponent implements OnInit {
       group: [product.group],
       details: this.fb.group({})
     });
+    if (details) {
+      this.addItemDetails(formGroup, details);
+    }
+    this.subscribeItem(formGroup, product);
+    return formGroup;
+  }
 
+  subscribeItem(formGroup: FormGroup, product: IProduct | IOrderItem) {
     formGroup.get('discountedPrice').valueChanges.subscribe((value) => {
       const currentPrice = this.calculateProductPrice(product);
       formGroup.patchValue({
@@ -347,21 +349,23 @@ export class NewOrderComponent implements OnInit {
     });
 
     formGroup.get('discount').valueChanges.subscribe((discount) => {
-      const newPrice = this.calculateProductPrice(product, discount);
+      const newPrice = this.calculateDiscountedItemPrice(product, discount);
       formGroup.patchValue({
         discountedPrice: newPrice
       }, { emitEvent: false });
     });
-    if (details) {
-      this.addItemDetails(formGroup, details);
-    }
-    return formGroup;
+  }
+
+  calculateDiscountedItemPrice(item: IOrderItem | IProduct , discount) {
+    let price = item.price;
+    price = price - (price * (Number(discount) / 100));
+    return Math.ceil(price);
   }
 
   addItemDetails(formGroup: FormGroup, details) {
     if (details.studio) {
       return this.addItemStudioDetails(formGroup, details);
-    } else {
+    } else if (details.comment) {
       return this.addItemCommentDetails(formGroup, details);
     }
   }
@@ -411,22 +415,6 @@ export class NewOrderComponent implements OnInit {
     });
   }
 
-  getAllErrors(form: FormGroup | FormArray): { [key: string]: any; } | null {
-    let hasError = false;
-    const result = Object.keys(form.controls).reduce((acc, key) => {
-        const control = form.get(key);
-        const errors = (control instanceof FormGroup || control instanceof FormArray)
-            ? this.getAllErrors(control)
-            : control.errors;
-        if (errors) {
-            acc[key] = errors;
-            hasError = true;
-        }
-        return acc;
-    }, {} as { [key: string]: any; });
-    return hasError ? result : null;
-  }
-
   toggleOrderDiscount() {
     const isEditDiscount = this.orderForm.get('isEditDiscount').value;
     this.orderForm.patchValue({
@@ -472,7 +460,7 @@ export class NewOrderComponent implements OnInit {
        return of(err);
     })).subscribe((result) => {
       order.customer = result;
-      return this.ordersCollection.add(order).then((doc) => {
+      return this.orderDoc.update(order).then((doc) => {
         this.router.navigate(['orders/list']);
       }).catch((err) => {
         this.snackBar.open('Failed to save order. Please try again', 'ok', {

@@ -1,9 +1,16 @@
-<h2 mat-dialog-title>{{product.name}}</h2>
+<h2 mat-dialog-title>{{item.name}}</h2>
 <mat-dialog-content>
-    <form [formGroup]="itemForm">
+    <form [formGroup]="simpleItemForm" *ngIf="item.group!='טלית'">
         <mat-form-field>
+          <mat-label>Comment</mat-label>
+          <textarea matInput type="text" formControlName="comment" placeholder="Enter your comments"></textarea>
+        </mat-form-field>
+    </form>
+    <form [formGroup]="specialItemForm" *ngIf="item.group=='טלית'">
+      <div formGroupName="studio">
+        <mat-form-field class="atara-container">
           <mat-label>Atara</mat-label>
-          <input matInput type="text" formControlName="atara" placeholder="Enter Atara text">
+          <textarea matInput type="text" formControlName="atara" placeholder="Enter Atara text"></textarea>
         </mat-form-field>
         <div formGroupName="corners">
             <div class="corners-top">
@@ -27,9 +34,10 @@
                 </mat-form-field>
             </div>
         </div>
+      </div>
     </form>
 </mat-dialog-content>
 <mat-dialog-actions>
   <button mat-button mat-dialog-close>Cancel</button>
-  <button mat-button [mat-dialog-close]="itemForm.value">Save</button>
+  <button mat-button [mat-dialog-close]="onClose()">Save</button>
 </mat-dialog-actions>

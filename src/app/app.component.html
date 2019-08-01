@@ -1,1 +1,10 @@
-<navigation-main></navigation-main>
+<div class="spinner-container" *ngIf="isCustomersLoading && isProductsLoading && isOrdersLoading">
+    <div class="spinner-message-container">
+        <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
+        <div class="comm-error">Loading...</div>
+    </div>
+</div>
+<div *ngIf="!isCustomersLoading && !isProductsLoading && !isOrdersLoading" [class.isPrinting]="printService.isPrinting">
+    <navigation-main></navigation-main>
+    <router-outlet name="print"></router-outlet>
+</div>

@@ -14,7 +14,7 @@ export class MainComponent implements OnInit {
   title;
 
   constructor(private auth: AuthenticationService, private router: Router, private activatedRoute: ActivatedRoute) { 
-  	auth.user.subscribe((user) => {
+    auth.user.subscribe((user) => {
   		this.user = user;
     });
     this.router.events

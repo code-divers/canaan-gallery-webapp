@@ -1,0 +1,164 @@
+<div class="spinner-container" *ngIf="orderLoding">
+  <div class="spinner-message-container">
+    <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
+    <div class="comm-error">Loading...</div>
+  </div>
+</div>
+<div *ngIf="!orderLoding">
+    <form [formGroup]="orderForm" (ngSubmit)="onSubmit()" class="form-container">
+      <div class="top-container">
+        <div formGroupName="customer" class="customer-container" [class.mat-elevation-z2]="true">
+          <input type="hidden" formControlName="id">
+          <input type="hidden" formControlName="name">
+          <h3 class="customer-title">Customer</h3>
+          <div class="side left">
+              <mat-form-field>
+                  <mat-chip-list #customerChipList aria-label="Customer selection" multiple="false" >
+                    <mat-chip *ngIf="selectedCustomer" removable="false">
+                      #{{selectedCustomer.id}} - {{selectedCustomer.name | titlecase}}
+                  </mat-chip>
+                </mat-chip-list>
+              </mat-form-field>
+              <mat-form-field>
+                <input matInput type="text" formControlName="address" placeholder="Address">
+              </mat-form-field>
+              <mat-form-field>
+                <input matInput type="text" formControlName="city" placeholder="City">
+              </mat-form-field>
+              <mat-form-field>
+                  <input matInput type="text" formControlName="state" placeholder="State">
+              </mat-form-field>
+              <mat-form-field>
+                <input matInput type="text" formControlName="country" placeholder="Country">
+              </mat-form-field>
+          </div>
+          <div class="side right">
+            <mat-form-field>
+              <input matInput type="tel" formControlName="phone" placeholder="Phone number">
+            </mat-form-field>
+            <mat-form-field>
+              <input matInput type="email" formControlName="email" placeholder="Email">
+            </mat-form-field>
+            <mat-form-field>
+              <input matInput type="text" formControlName="zipcode" placeholder="Zipcode">
+            </mat-form-field>
+            <div>
+                <mat-form-field>
+                    <mat-label>Currency</mat-label>
+                    <mat-select formControlName="currency" (selectionChange)="onCurrencyChange($event.value)">
+                        <mat-option *ngFor="let currency of currencies" [value]="currency.id">
+                            {{currency.id}}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+                <mat-checkbox formControlName="isExport">Export?</mat-checkbox>
+            </div>
+          </div>
+        </div>
+        <div class="actions-container" [class.mat-elevation-z2]="true">
+            <div class="container-line">
+                {{ orderForm.get('created').value | date: 'dd/MM/yyyy HH:mm' }} <br> #{{ orderId }}
+            </div>
+            <div class="exchange-rate container-line">$: {{currency.rate | currency:'ILS'}} ({{currency.lastUpdate | date: 'dd/MM/yyyy'}})</div>
+            <div class="container-line">
+                <mat-form-field class="shipping-input">
+                    <mat-label>Shipping</mat-label>
+                    <input matInput type="number" formControlName="shipping" min="0" step="1">
+                    <span matSuffix>{{ ( 0 | currency : getCurrency().id : 'symbol-narrow' ) | slice:0:1 }}</span>
+                </mat-form-field>
+            </div>
+            <div class="container-line">
+              <div class="price-container">
+                  <div>Price: <a class="hand" (click)="toggleOrderDiscount()" *ngIf="!orderForm.get('isEditDiscount').value">{{orderForm.get('price').value | currency: getCurrency().id  : 'symbol' : '1.0' }}</a>&nbsp;
+                  <span *ngIf="!orderForm.get('isEditDiscount').value && orderForm.get('discount').value > 0">(-{{orderForm.get('discount').value / 100 | percent}})</span>
+                </div>
+                  <button (click)="toggleOrderDiscount()" mat-icon-button aria-label="Approve edit" *ngIf="orderForm.get('isEditDiscount').value">
+                    <mat-icon>done</mat-icon>
+                  </button>
+                  <mat-form-field class="price-input" *ngIf="orderForm.get('isEditDiscount').value">
+                      <mat-label>price</mat-label>
+                      <input matInput type="number" formControlName="price" min="0" step="1">
+                      <span matSuffix></span>
+                  </mat-form-field>
+                  <mat-form-field class="discount-input" *ngIf="orderForm.get('isEditDiscount').value">
+                      <mat-label>discount</mat-label>
+                      <input matInput type="number" formControlName="discount" placeholder="0" size="3" min="0" max="100" step="1">
+                      <span matSuffix>%</span>
+                  </mat-form-field>
+              </div>
+            </div>
+            <div class="container-line">
+              Total: {{ orderForm.get('subtotal').value | currency: getCurrency().id : 'symbol' : '1.0' }}
+            </div>
+            <button mat-raised-button type="submit" [disabled]="!orderForm.valid">Update</button>
+            <button mat-raised-button type="button" [matMenuTriggerFor]="actionMenu">Other actions</button>
+            <mat-menu #actionMenu="matMenu">
+              <button mat-menu-item>Add/Edit sketch</button>
+              <button mat-menu-item>Set discount</button>
+              <button mat-menu-item>Print for customer</button>
+            </mat-menu>
+        </div>
+      </div>
+      <div class="items-container" [class.mat-elevation-z2]="true">
+          <h3>Items</h3>       
+          <mat-form-field class="filter-product-container">
+            <div class="filter-product">
+                <input #productNameInput matInput [formControl]="filterProductsInput" type="text" placeholder="Search products by name or number" [matAutocomplete]="productNameAuto" matAutocompletePosition="above">
+                <mat-spinner *ngIf="isProductsLoading | async" strokeWidth="1" diameter="20"></mat-spinner>
+            </div>
+            <mat-autocomplete #productNameAuto [displayWith]="productFilterResult" (optionSelected)="onProductSelect($event)">
+              <mat-option *ngFor="let product of products| async" [value]="product" class="product-option">
+                  <span class="product-sub">#{{ product.id }} </span><span class="product-sub">({{ calculateProductPrice(product) | currency: getCurrency().id : 'symbol' : '1.0' }})</span>-<span>{{ product.name }}</span>
+              </mat-option>
+            </mat-autocomplete>
+          </mat-form-field>
+          <div>
+            <div *ngIf="orderForm.get('items').value.length == 0">No items in the list</div>
+            <mat-list formArrayName="items">
+              <mat-list-item class="item-row" *ngFor="let item of getItemsControls(); let i = index;" [formGroupName]="i">
+                <div class="items-line">
+                  <button type="button" mat-icon-button (click)="removeItem(i)">
+                    <mat-icon aria-label="Delete item" matListIcon>delete</mat-icon>
+                  </button>
+                  <div class="item-name">#{{item.get('id').value}} - {{item.get('name').value}}</div>
+                  <div class="item-name">
+                    <a class="hand" [ngClass]="{discounted: item.get('discount').value }" *ngIf="!item.get('isEditDiscount').value" (click)="toggleItemDiscount(item)">{{item.get('price').value | currency: getCurrency().id : 'symbol' : '1.0' }}</a>
+                    <div *ngIf="!item.get('isEditDiscount').value && item.get('discount').value > 0">{{ item.get('discountedPrice').value | currency: getCurrency().id : 'symbol' : '1.0' }}</div>
+                    <button (click)="toggleItemDiscount(item)" mat-icon-button aria-label="Approve edit" *ngIf="item.get('isEditDiscount').value">
+                      <mat-icon>done</mat-icon>
+                    </button>
+                    <mat-form-field class="price-input" *ngIf="item.get('isEditDiscount').value">
+                        <mat-label>price</mat-label>
+                        <input matInput type="number" formControlName="discountedPrice" min="0" step="1">
+                        <span matSuffix>{{ ( 0 | currency : getCurrency().id : 'symbol-narrow' ) | slice:0:1 }}</span>
+                    </mat-form-field>
+                    <mat-form-field class="discount-input" *ngIf="item.get('isEditDiscount').value">
+                        <mat-label>discount</mat-label>
+                        <input matInput type="number" formControlName="discount" placeholder="0" size="3" min="0" max="100" step="1">
+                        <span matSuffix>%</span>
+                    </mat-form-field>
+                    <div *ngIf="!item.get('isEditDiscount').value && item.get('discount').value > 0">(-{{item.get('discount').value / 100 | percent}})</div>
+                  </div>
+                  <mat-form-field class="item-quantity">
+                    <mat-label>quantity</mat-label>
+                    <input matInput type="number" formControlName="quantity" placeholder="0" size="2">
+                  </mat-form-field>
+                  <div class="item-details">
+                    <div *ngIf="!isItemDetails(item)"><a class="hand" (click)="onItemDetailClick(item)">Add details</a></div>
+                    <div *ngIf="item.get('details').value.comment"><a class="hand" (click)="onItemDetailClick(item)">{{item.get('details').value.comment | limitTo: 10}}</a></div>
+                    <mat-chip-list *ngIf="item.get('details').value.studio">
+                        <mat-chip *ngIf="item.get('details').value.studio.atara" value="atara" (click)="onItemDetailClick(item)" matTooltip="Atara">{{item.get('details').value.studio.atara | limitTo: 10}}</mat-chip>
+                        <mat-chip *ngIf="item.get('details').value.studio.corners.topLeft" value="tl" (click)="onItemDetailClick(item)" matTooltip="Top left corner">{{item.get('details').value.studio.corners.topLeft | limitTo: 10}}</mat-chip>
+                        <mat-chip *ngIf="item.get('details').value.studio.corners.topRight" (click)="onItemDetailClick(item)" matTooltip="Top right corner">{{item.get('details').value.studio.corners.topRight | limitTo: 10}}</mat-chip>
+                        <mat-chip *ngIf="item.get('details').value.studio.corners.bottomLeft" (click)="onItemDetailClick(item)" matTooltip="Bootom left corner">{{item.get('details').value.studio.corners.bottomLeft | limitTo: 10}}</mat-chip>
+                        <mat-chip *ngIf="item.get('details').value.studio.corners.bottomRight" (click)="onItemDetailClick(item)" matTooltip="Bottom right corner">{{item.get('details').value.studio.corners.bottomRight | limitTo: 10}}</mat-chip>
+                    </mat-chip-list>
+                  </div>
+                </div>
+                <mat-divider></mat-divider>
+              </mat-list-item>
+            </mat-list>
+          </div>
+        </div>
+    </form>
+</div>
