@@ -23,6 +23,8 @@
 
 .item-line {
     display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
 }
 
 .item-divider {
@@ -41,12 +43,29 @@
 }
 
 .item-price {
-    width: 10%;
+    width: 25%;
     margin: 0.5em;
+    display: flex;
+    flex-wrap: nowrap;
+}
+
+.item-price div {
+    margin-right: 0.2em;
+}
+
+.discounted {
+    text-decoration-line: line-through;
 }
 
 .item-details {
+    width: 20%;
     margin: 0.5em;
+}
+
+.studio-details td {
+    text-align: center;
+    vertical-align: middle;
+    padding: 0.2em;
 }
 
 .footer-container {
@@ -62,6 +81,11 @@
     margin: 1em;
     width: 60%;
     -webkit-print-color-adjust: exact; 
+}
+
+.info-box {
+    width: 60%;
+    padding-right: 5em;
 }
 
 .order-summary {

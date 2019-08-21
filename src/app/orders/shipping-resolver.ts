@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Resolve, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import { Observable, of } from 'rxjs';
 import { first, map, catchError } from 'rxjs/operators';
-import { IProduct } from './order-interface';
+import { IProduct } from '../order-interface';
 import { AngularFirestore } from '@angular/fire/firestore';
 
 @Injectable()

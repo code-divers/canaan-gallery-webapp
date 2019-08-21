@@ -1,9 +1,9 @@
 <h2 mat-dialog-title>{{item.name}}</h2>
 <mat-dialog-content>
     <form [formGroup]="simpleItemForm" *ngIf="item.group!='טלית'">
-        <mat-form-field>
+        <mat-form-field class="comments-field">
           <mat-label>Comment</mat-label>
-          <textarea matInput type="text" formControlName="comment" placeholder="Enter your comments"></textarea>
+          <textarea matInput type="text" formControlName="comment" placeholder="Enter your comments" matTextareaAutosize matAutosizeMinRows="10"></textarea>
         </mat-form-field>
     </form>
     <form [formGroup]="specialItemForm" *ngIf="item.group=='טלית'">
@@ -14,21 +14,21 @@
         </mat-form-field>
         <div formGroupName="corners">
             <div class="corners-top">
-                <mat-form-field>
+                <mat-form-field class="corner-field">
                   <mat-label>Top left</mat-label>
                   <input matInput type="text" formControlName="topLeft" placeholder="Enter top left text">
                 </mat-form-field>
-                <mat-form-field>
+                <mat-form-field class="corner-field">
                   <mat-label>Top right</mat-label>
                   <input matInput type="text" formControlName="topRight" placeholder="Enter top right text">
                 </mat-form-field>
             </div>
             <div class="corners-bottom">
-                <mat-form-field>
+                <mat-form-field class="corner-field">
                   <mat-label>Bottom left</mat-label>
                   <input matInput type="text" formControlName="bottomLeft" placeholder="Enter bottom left text">
                 </mat-form-field>
-                <mat-form-field>
+                <mat-form-field class="corner-field">
                   <mat-label>Bottom right</mat-label>
                   <input matInput type="text" formControlName="bottomRight" placeholder="Enter bottom right text">
                 </mat-form-field>

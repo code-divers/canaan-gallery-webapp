@@ -1,3 +1,6 @@
+.customers-list {
+    width: 100%;
+}
 
 .actions-container {
     width: 100%;
@@ -6,7 +9,7 @@
 }
 
 .actions-right {
-    width: 20%;
+    width: 10%;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -14,20 +17,4 @@
 
 .filter-input {
     width: 60%;
-}
-
-.exchange-rate {
-    font-size: 80%;
-}
-
-.orders-list {
-    width: 100%;
-}
-
-.discounted {
-    text-decoration-line: line-through;
-}
-
-.selection {
-    cursor: pointer;
 }

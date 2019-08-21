@@ -1,36 +1,41 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Meta } from '@angular/platform-browser';
 import { environment } from '../environments/environment';
 import { PrintService } from './services/print.service';
 import { ProductsDataProviderService } from './services/products-data-provider.service';
 import { CustomersDataProviderService } from './services/customers-data-provider.service';
 import { OrdersDataProviderService } from './services/orders-data-provider.service';
+import { startWith, map } from 'rxjs/operators';
+import { forkJoin, Observable, merge } from 'rxjs';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent {
+export class AppComponent implements OnInit{
   title = 'webapp';
-  isCustomersLoading = true;
-  isProductsLoading = true;
-  isOrdersLoading = true;
+  isCustomersLoading = false;
+  isProductsLoading = false;
+  isOrdersLoading = false;
   constructor(
     private meta: Meta,
     public printService: PrintService,
     private productsDataProvider: ProductsDataProviderService,
-    private customersDataProvider: CustomersDataProviderService, private ordersDataProvider: CustomersDataProviderService) {
-      this.productsDataProvider.loadingStatus.subscribe(status => {
-        this.isProductsLoading = status;
-      });
+    private customersDataProvider: CustomersDataProviderService, private ordersDataProvider: OrdersDataProviderService) { }
 
-      this.customersDataProvider.loadingStatus.subscribe(status => {
-        this.isCustomersLoading = status;
-      });
+  ngOnInit() { }
 
-      this.ordersDataProvider.loadingStatus.subscribe(status => {
-        this.isOrdersLoading = status;
-      });
+  isLoading() {
+    return merge(
+      this.ordersDataProvider.loadingStatus,
+      this.customersDataProvider.loadingStatus,
+      this.productsDataProvider.loadingStatus);
+  }
+
+  isNotLoading() {
+    return this.isLoading().pipe(map(value => {
+        return !value;
+      }));
   }
 }

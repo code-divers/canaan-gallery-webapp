@@ -1,0 +1,12 @@
+<mat-dialog-content>
+  <form [formGroup]="orderCommentsForm">
+      <mat-form-field class="comments-field">
+        <mat-label>Comments</mat-label>
+        <textarea matInput type="text" formControlName="comment" placeholder="Enter your comments" matTextareaAutosize matAutosizeMinRows="10"></textarea>
+      </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button mat-button mat-dialog-close>Cancel</button>
+  <button mat-button [mat-dialog-close]="onClose()">Save</button>
+</mat-dialog-actions>

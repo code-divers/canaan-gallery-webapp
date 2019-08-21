@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { IOrder } from '../orders/order-interface';
+import { IOrder } from '../order-interface';
 import { AngularFirestore } from '@angular/fire/firestore';
 import { PrintService } from '../services/print.service';
 
@@ -23,6 +23,26 @@ export class PrintOrderComponent implements OnInit {
       this.order = order;
       this.printService.onDataReady();
     });
+  }
+
+  formatAddress(order: IOrder) {
+    const parts = [];
+    if (order.customer.house) {
+      parts.push(order.customer.house);
+    }
+    if (order.customer.street) {
+      parts.push(order.customer.street);
+    }
+    if (order.customer.city) {
+      parts.push(order.customer.city);
+    }
+    if (order.customer.state) {
+      parts.push(order.customer.state);
+    }
+    if (order.customer.zipcode) {
+      parts.push(order.customer.zipcode);
+    }
+    return parts.join(', ');
   }
 
 }

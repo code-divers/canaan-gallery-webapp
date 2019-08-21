@@ -14,6 +14,7 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatListModule } from '@angular/material/list';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatGridListModule } from '@angular/material/grid-list';
 
 import { environment } from '../environments/environment';
 
@@ -22,7 +23,7 @@ import { AppComponent } from './app.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { OrdersModule } from './orders/orders.module';
-
+import { CustomersModule } from './customers/customers.module';
 import { AuthenticationService } from './services/authentication.service';
 
 import { MainComponent } from './main/main.component';
@@ -47,11 +48,13 @@ import { PrintOrderComponent } from './print-order/print-order.component';
     MatToolbarModule,
     MatListModule,
     MatProgressSpinnerModule,
+    MatGridListModule,
     HttpClientModule,
     BrowserModule,
     BrowserAnimationsModule,
     DashboardModule,
     OrdersModule,
+    CustomersModule,
     AngularFireModule.initializeApp(environment.firebase),
     AngularFireAuthModule,
     AngularFireDatabaseModule,

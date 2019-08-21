@@ -2,10 +2,15 @@
     <mat-form-field class="filter-input">
       <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Search order by ID or customer name">
     </mat-form-field>
-    <div class="exchange-rate">$: {{currency.rate | currency:'ILS'}} ({{currency.lastUpdate | date: 'dd/MM/yyyy'}})</div>
-    <button mat-fab color="primary" (click)="addNewOrder()">
-        <mat-icon aria-label="Add new order">add</mat-icon>
-    </button>
+    <div class="actions-right">
+        <div class="exchange-rate">$: {{currency.rate | currency:'ILS'}} ({{currency.lastUpdate | date: 'dd/MM/yyyy'}})</div>
+        <button [disabled]="selection.selected.length == 0" mat-fab color="primary" (click)="exportToCSV()">
+            <mat-icon aria-label="Export to CSV">get_app</mat-icon>
+        </button>
+        <button mat-fab color="primary" (click)="addNewOrder()">
+            <mat-icon aria-label="Add new order">add</mat-icon>
+        </button>
+    </div>
 </div>
 <table mat-table [dataSource]="dataSource" matSort class="orders-list">
   <ng-container matColumnDef="number">
@@ -13,11 +18,11 @@
     <td mat-cell *matCellDef="let order"> <a [routerLink]="['/orders/edit', order.id]">{{order.comaxDocNumber || order.id}}</a> </td>
   </ng-container>
   <ng-container matColumnDef="select">
-      <th mat-header-cell *matHeaderCellDef>
+      <th mat-header-cell *matHeaderCellDef>  
           <mat-checkbox (change)="$event ? masterToggle() : null" [checked]="selection.hasValue() && isAllSelected()" [indeterminate]="selection.hasValue() && !isAllSelected()" [aria-label]="checkboxLabel()"></mat-checkbox>
         </th>
         <td mat-cell *matCellDef="let order">
-          <mat-checkbox (click)="$event.stopPropagation()" (change)="$event ? selection.toggle(order) : null" [checked]="selection.isSelected(order)" [aria-label]="checkboxLabel(order)">
+          <mat-checkbox (click)="$event.stopPropagation()" (change)="$event ? selection.toggle(order) : null" [checked]="isSelected(order)" [aria-label]="checkboxLabel(order)">
           </mat-checkbox>
         </td>
     </ng-container>
@@ -27,7 +32,7 @@
   </ng-container>
   <ng-container matColumnDef="customer">
     <th mat-header-cell *matHeaderCellDef mat-sort-header> Customer </th>
-    <td mat-cell *matCellDef="let order"> {{order.customer.name | titlecase}}, {{order.customerAddress.length > 0 ? order.customerAddress.join(', ') : ''}} ({{order.customer.id}})</td>
+    <td mat-cell *matCellDef="let order">{{order.customer.name}} ({{order.customer.id}}) {{ formatAddress(order) }} </td>
   </ng-container>
   <ng-container matColumnDef="price">
     <th mat-header-cell *matHeaderCellDef> Price </th>
@@ -53,8 +58,6 @@
         <mat-menu #actionMenu="matMenu">
           <button [routerLink]="['/orders/edit', order.id]" mat-menu-item>Edit order</button>
           <button mat-menu-item (click)="printDialog(order)">Print for customer</button>
-          <button mat-menu-item>Print shipping statement</button>
-          <button mat-menu-item>Add/Edit sketch</button>
         </mat-menu>
         </button>
     </td>

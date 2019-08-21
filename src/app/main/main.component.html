@@ -15,16 +15,16 @@
   			<div class="user-email">{{user.email}}</div>
   		</div>
   		<button mat-button (click)="logout()">Logout</button>
-  	</div>
+		</div>
   	<div class="app-menu" *ngIf="user">
   		<mat-nav-list>
   			<mat-list-item>
   				<mat-icon matListIcon>filter_list</mat-icon>
-  				<a routerLink="orders/list">Orders list</a>
+  				<a routerLink="/orders/list">Orders list</a>
   			</mat-list-item>
   			<mat-list-item>
   				<mat-icon matListIcon>add</mat-icon>
-  				<a routerLink="orders/new">New order</a>
+  				<a routerLink="/orders/new">New order</a>
   			</mat-list-item>
 	    </mat-nav-list>
   	</div>

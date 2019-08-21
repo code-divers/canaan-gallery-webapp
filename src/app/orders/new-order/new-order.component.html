@@ -8,59 +8,87 @@
     <form [formGroup]="orderForm" (ngSubmit)="onSubmit()" class="form-container">
       <div class="top-container">
         <div formGroupName="customer" class="customer-container" [class.mat-elevation-z2]="true">
-          <input type="hidden" formControlName="id">
           <h3 class="customer-title">Customer</h3>
-          <div class="side left">
-              <mat-form-field>
-                  <mat-chip-list #customerChipList aria-label="Customer selection" multiple="false" >
-                    <mat-chip *ngIf="selectedCustomer" removable="true"
-                    (removed)="removeCustomer()">
-                    #{{selectedCustomer.id}} - {{selectedCustomer.name | titlecase}}
-                    <mat-icon matChipRemove >cancel</mat-icon>
-                  </mat-chip>
-                <input matInput #customerNameInput [formControl]="filterCustomerInput" type="text" placeholder="First name and Last name" [matAutocomplete]="customerNameAuto" [matChipInputFor]="customerChipList" matChipInputAddOnBlur="true" formControlName="name" required>
-                <mat-spinner *ngIf="isCustomersLoading | async" strokeWidth="1" diameter="20"></mat-spinner>
-                </mat-chip-list>
-                <mat-autocomplete #customerNameAuto (optionSelected)="onCustomerSelect($event)">
-                  <mat-option *ngFor="let customer of customers| async" [value]="customer">
-                    #{{ customer.id }}-{{ customer.name | titlecase}}
-                  </mat-option>
-                </mat-autocomplete>
-              </mat-form-field>
-              <mat-form-field>
-                <input matInput type="text" formControlName="address" placeholder="Address">
-              </mat-form-field>
-              <mat-form-field>
-                <input matInput type="text" formControlName="city" placeholder="City">
-              </mat-form-field>
-              <mat-form-field>
-                  <input matInput type="text" formControlName="state" placeholder="State">
-              </mat-form-field>
-              <mat-form-field>
-                <input matInput type="text" formControlName="country" placeholder="Country">
-              </mat-form-field>
-          </div>
-          <div class="side right">
-            <mat-form-field>
-              <input matInput type="tel" formControlName="phone" placeholder="Phone number">
-            </mat-form-field>
-            <mat-form-field>
-              <input matInput type="email" formControlName="email" placeholder="Email">
-            </mat-form-field>
-            <mat-form-field>
-              <input matInput type="text" formControlName="zipcode" placeholder="Zipcode">
-            </mat-form-field>
-            <div>
-                <mat-form-field>
-                    <mat-label>Currency</mat-label>
-                    <mat-select formControlName="currency" (selectionChange)="onCurrencyChange($event.value)">
-                        <mat-option *ngFor="let currency of currencies" [value]="currency.id">
-                            {{currency.id}}
-                        </mat-option>
-                    </mat-select>
-                </mat-form-field>
-                <mat-checkbox formControlName="isExport">Export?</mat-checkbox>
-            </div>
+          <div class="customer-form">
+              <div class="side left">
+                  <mat-form-field class="full-width-field">
+                      <mat-chip-list #customerChipList aria-label="Customer selection" multiple="false" >
+                        <mat-chip *ngIf="selectedCustomer" removable="true"
+                        (removed)="removeCustomer()">
+                        #{{selectedCustomer.id}} - {{selectedCustomer.name | titlecase}}
+                        <mat-icon matChipRemove >cancel</mat-icon>
+                      </mat-chip>
+                    <input matInput #customerNameInput [formControl]="filterCustomerInput" type="text" placeholder="First name and Last name" [matAutocomplete]="customerNameAuto" [matChipInputFor]="customerChipList" matChipInputAddOnBlur="true" formControlName="name" required>
+                    <mat-spinner *ngIf="isCustomersLoading | async" strokeWidth="1" diameter="20"></mat-spinner>
+                    </mat-chip-list>
+                    <mat-autocomplete #customerNameAuto (optionSelected)="onCustomerSelect($event)">
+                      <mat-option *ngFor="let customer of customers| async" [value]="customer">
+                        #{{ customer.id }}-{{ customer.name | titlecase}}
+                      </mat-option>
+                    </mat-autocomplete>
+                  </mat-form-field>
+                  <div class="address-container">
+                      <mat-form-field class="full-width-field">
+                        <input matInput type="text" formControlName="address" placeholder="Address">
+                        <button matSuffix type="button" (click)="validateAddress()" mat-icon-button aria-label="Approve edit">
+                            <mat-icon>done</mat-icon>
+                        </button>
+                      </mat-form-field>
+                      <mat-form-field class="full-width-field" *ngIf="addresses && addresses.length > 0">
+                        <mat-label>Select address</mat-label>
+                        <mat-select (selectionChange)="onAddressSelect($event)">
+                          <mat-option *ngFor="let address of addresses" [value]="address">
+                            {{address.display_name}}
+                          </mat-option>
+                        </mat-select>
+                      </mat-form-field>
+                  </div>
+                  <div class="street-container">
+                    <mat-form-field class="street-field">
+                        <input matInput type="text" formControlName="street" placeholder="Street">
+                    </mat-form-field>
+                    <mat-form-field class="house-field">
+                        <input matInput type="text" formControlName="house" placeholder="House">
+                    </mat-form-field>
+                  </div>
+                  <div class="city-container">
+                      <mat-form-field class="half-width-field city-field">
+                          <input matInput type="text" formControlName="city" placeholder="City">
+                        </mat-form-field>
+                        <mat-form-field class="half-width-field">
+                            <input matInput type="text" formControlName="state" placeholder="State">
+                        </mat-form-field>
+                  </div>
+              </div>
+              <div class="side right">
+                <div class="country-container">
+                  <mat-form-field class="country-field">
+                    <input matInput type="text" formControlName="country" placeholder="Country">
+                  </mat-form-field>
+                  <mat-form-field class="zipcode-field">
+                    <input matInput type="text" formControlName="zipcode" placeholder="Zipcode">
+                  </mat-form-field>
+                </div>
+                <div class="phone-container">
+                  <mat-form-field class="half-width-field phone-field">
+                    <input matInput type="tel" formControlName="phone" placeholder="Phone number">
+                  </mat-form-field>
+                  <mat-form-field class="half-width-field">
+                    <input matInput type="email" formControlName="email" placeholder="Email">
+                  </mat-form-field>
+                </div>
+                <div>
+                    <mat-form-field>
+                        <mat-label>Currency</mat-label>
+                        <mat-select formControlName="currency" (selectionChange)="onCurrencyChange($event.value)">
+                            <mat-option *ngFor="let currency of currencies" [value]="currency.id">
+                                {{currency.id}}
+                            </mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                    <mat-checkbox formControlName="isExport">Export?</mat-checkbox>
+                </div>
+              </div>
           </div>
         </div>
         <div class="actions-container" [class.mat-elevation-z2]="true">
@@ -99,14 +127,10 @@
               Total: {{ orderForm.get('subtotal').value | currency: getCurrency().id : 'symbol' : '1.0' }}
             </div>
             <div class="container-line">
-              <button mat-raised-button type="submit" [disabled]="!orderForm.valid">Save</button>
+              <button mat-raised-button type="button" (click)="onSetOrderComments()">Comments</button>
             </div>
             <div class="container-line">
-              <button mat-raised-button type="button" [matMenuTriggerFor]="actionMenu">Other actions</button>
-              <mat-menu #actionMenu="matMenu">
-                <button mat-menu-item>Add/Edit sketch</button>
-                <button mat-menu-item>Set discount</button>
-              </mat-menu>
+              <button mat-raised-button type="submit" [disabled]="!orderForm.valid">Save</button>
             </div>
             <!--pre><code>{{ getAllErrors(orderForm) | json }}</code></pre-->
         </div>
@@ -144,11 +168,11 @@
                       <input matInput type="number" formControlName="discountedPrice" min="0" step="1">
                       <span matSuffix>{{ ( 0 | currency : getCurrency().id : 'symbol-narrow' ) | slice:0:1 }}</span>
                   </mat-form-field>
-                  <mat-form-field class="discount-input" *ngIf="item.get('isEditDiscount').value">
+                  <!-- mat-form-field class="discount-input" *ngIf="item.get('isEditDiscount').value">
                       <mat-label>discount</mat-label>
                       <input matInput type="number" formControlName="discount" placeholder="0" size="3" min="0" max="100" step="1">
                       <span matSuffix>%</span>
-                  </mat-form-field>
+                  </mat-form-field-->
                   <div *ngIf="!item.get('isEditDiscount').value && item.get('discount').value > 0">(-{{item.get('discount').value / 100 | percent}})</div>
                 </div>
                 <mat-form-field class="item-quantity">

@@ -1,7 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
-import { MatGridListModule } from '@angular/material/grid-list';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
@@ -25,6 +24,8 @@ import { ItemDetailsComponent } from './item-details/item-details.component';
 import { TruncatePipe } from '../truncate-pipe';
 import { EditOrderComponent } from './edit-order/edit-order.component';
 import { NgxPrintModule } from 'ngx-print';
+import { OrderCommentsComponent } from './order-comments/order-comments.component';
+import { CanvasWhiteboardModule } from 'ng2-canvas-whiteboard';
 
 @NgModule({
   declarations: [
@@ -32,14 +33,14 @@ import { NgxPrintModule } from 'ngx-print';
     NewOrderComponent,
     ItemDetailsComponent,
     TruncatePipe,
-    EditOrderComponent],
+    EditOrderComponent,
+    OrderCommentsComponent],
   entryComponents: [
-    ItemDetailsComponent
+    ItemDetailsComponent, OrderCommentsComponent
   ],
   imports: [
     ReactiveFormsModule,
     CommonModule,
-    MatGridListModule,
     MatInputModule,
     MatFormFieldModule,
     MatAutocompleteModule,
@@ -57,7 +58,8 @@ import { NgxPrintModule } from 'ngx-print';
     MatTooltipModule,
     MatSnackBarModule,
     NgxPrintModule,
-    OrdersRoutingModule
+    OrdersRoutingModule,
+    CanvasWhiteboardModule
   ]
 })
 export class OrdersModule { }

@@ -10,12 +10,15 @@ export interface IOrder {
     subtotal: number;
     customer: ICustomer;
     items: IOrderItem[];
+    comments: any;
   }
 
   export interface ICustomer {
     id: string;
     name: string;
     address: string;
+    street: string;
+    house: string;
     city: string;
     state: string;
     country: string;
@@ -43,6 +46,7 @@ export interface IOrder {
     name: string;
     price: number;
     discount: number;
+    isEditDiscount: boolean;
     discountedPrice: number;
     quantity: number;
     details?: any;

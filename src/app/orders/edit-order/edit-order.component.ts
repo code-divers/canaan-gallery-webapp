@@ -4,14 +4,17 @@ import { FormControl, FormArray, FormBuilder, Validators, FormGroup } from '@ang
 import { AngularFirestore, AngularFirestoreCollection, AngularFirestoreDocument } from '@angular/fire/firestore';
 import { AngularFireFunctions } from '@angular/fire/functions';
 import { Observable, BehaviorSubject, combineLatest, of } from 'rxjs';
-import { IOrder, IOrderItem, ICustomer, IProduct, IProductGroup } from '../order-interface';
+import { IOrder, IOrderItem, ICustomer, IProduct, IProductGroup } from '../../order-interface';
 import { switchMap, map, catchError } from 'rxjs/operators';
 import { MatDialog } from '@angular/material';
 import { MatAutocomplete, MatAutocompleteTrigger, MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { ItemDetailsComponent } from '../item-details/item-details.component';
+import { OrderCommentsComponent } from '../order-comments/order-comments.component';
 import { ICurrency } from '../../services/currency-api.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ProductsDataProviderService } from '../../services/products-data-provider.service';
+import { NominatimService } from '../../services/nominatim.service';
+import { PrintService } from '../../services/print.service';
 import { environment } from 'src/environments/environment.prod';
 
 @Component({
@@ -37,6 +40,7 @@ export class EditOrderComponent implements OnInit {
   customers: Observable<ICustomer[]>;
   isCustomersLoading: BehaviorSubject<boolean> = new BehaviorSubject(false);
   customerFilter: BehaviorSubject<string|null>;
+  addresses: [];
 
   shipping: IProduct;
   productGroups: Observable<IProductGroup[]>;
@@ -61,7 +65,9 @@ export class EditOrderComponent implements OnInit {
     private router: Router,
     private activatedRoute: ActivatedRoute,
     private snackBar: MatSnackBar,
-    private productsDataprovider: ProductsDataProviderService) {
+    private productsDataprovider: ProductsDataProviderService,
+    private printService: PrintService,
+    private nominatim: NominatimService) {
 
   }
 
@@ -95,6 +101,8 @@ export class EditOrderComponent implements OnInit {
         id: [null],
         name: [''],
         address: [''],
+        street: [''],
+        house: [''],
         city: [''],
         state: [''],
         country: [''],
@@ -104,7 +112,8 @@ export class EditOrderComponent implements OnInit {
         currency: [''],
         isExport: ['']
       }),
-      items: this.fb.array([])
+      items: this.fb.array([]),
+      comments: ['']
     });
     
     this.order.subscribe((result: IOrder) => {
@@ -157,10 +166,10 @@ export class EditOrderComponent implements OnInit {
       const currentPrice = this.summerizeItemsPrice(items);
       this.orderForm.patchValue({
         discount: ((currentPrice - price) / currentPrice) * 100
-      }, { emitEvent: false });
+      });
     });
 
-    this.orderForm.get('discount').valueChanges.subscribe((discount) => {
+    /*this.orderForm.get('discount').valueChanges.subscribe((discount) => {
       const items = this.orderForm.get('items').value;
       const shippingValue = this.orderForm.get('shipping').value;
       const price = this.summerizeItemsPrice(items, discount);
@@ -169,7 +178,7 @@ export class EditOrderComponent implements OnInit {
         price: price,
         subtotal: subtotal
       }, { emitEvent: false });
-    });
+    });*/
 
     (<FormControl>(<FormGroup>this.orderForm.get('customer')).controls['isExport']).valueChanges.subscribe((value) => {
       this.recalculateItems();
@@ -182,6 +191,41 @@ export class EditOrderComponent implements OnInit {
         price: price
       });
     });
+  }
+
+  validateAddress() {
+    this.addresses = [];
+    const address = this.orderForm.get('customer.address').value;
+    this.nominatim.searchAddress(address).subscribe((result: any) => {
+      if (result.length === 0) {
+        this.snackBar.open('Address does not exist', null, {
+          duration: 3000
+        });
+      } else if (result.length === 1) {
+        this.setAddressComponents(result[0]);
+      } else {
+        this.addresses = result;
+      }
+    });
+  }
+
+  onAddressSelect($event) {
+    this.setAddressComponents($event.value);
+  }
+
+  setAddressComponents(components: any) {
+    this.orderForm.patchValue({
+      customer: {
+        address: components.display_name,
+        street: components.address.street || components.address.road,
+        house: components.address.house_number,
+        city: components.address.city,
+        state: components.address.state,
+        country: components.address.country,
+        zipcode: components.address.postcode
+      }
+    });
+    this.addresses = [];
   }
 
   onCurrencyChange(currency) {
@@ -231,6 +275,7 @@ export class EditOrderComponent implements OnInit {
     const isExport =  (<FormGroup>this.orderForm.get('customer')).get('isExport').value;
     const currency = this.getCurrency();
     let price = product.price;
+    console.log('price', price);
     price = price / currency.rate;
     price = price - (price * (Number(discount) / 100));
     if (isExport) {
@@ -244,8 +289,9 @@ export class EditOrderComponent implements OnInit {
     items.forEach(item => {
       price += item.discountedPrice;
     });
-
-    price = price - (price * (discount / 100));
+    if (discount) {
+      price = price - (price * (discount / 100));
+    }
     return Math.ceil(price);
   }
 
@@ -279,7 +325,8 @@ export class EditOrderComponent implements OnInit {
 
   openDetailsPanel(item) {
     const dialogRef = this.dialog.open(ItemDetailsComponent, {
-      data: item.value
+      data: item.value,
+      width: '60%'
     });
     return dialogRef.afterClosed();
   }
@@ -300,7 +347,7 @@ export class EditOrderComponent implements OnInit {
       price: [item.price],
       discountedPrice: [item.discountedPrice],
       discount: [item.discount],
-      isEditDiscount: [false],
+      isEditDiscount: [item.isEditDiscount],
       quantity: [item.quantity],
       group: [item.group],
       details: this.fb.group({})
@@ -334,10 +381,11 @@ export class EditOrderComponent implements OnInit {
 
   subscribeItem(formGroup: FormGroup, product: IProduct | IOrderItem) {
     formGroup.get('discountedPrice').valueChanges.subscribe((value) => {
-      const currentPrice = this.calculateProductPrice(product);
+      const currentPrice = formGroup.get('price').value;
+      console.log(currentPrice);
       formGroup.patchValue({
         discount: ((currentPrice - value) / currentPrice) * 100
-      }, { emitEvent: false });
+      });
     });
 
     formGroup.get('quantity').valueChanges.subscribe((quantity) => {
@@ -348,12 +396,12 @@ export class EditOrderComponent implements OnInit {
       }, { emitEvent: false });
     });
 
-    formGroup.get('discount').valueChanges.subscribe((discount) => {
-      const newPrice = this.calculateDiscountedItemPrice(product, discount);
+    /*formGroup.get('discount').valueChanges.subscribe((discount) => {
+      const newPrice = this.calculateProductPrice(product, discount);
       formGroup.patchValue({
         discountedPrice: newPrice
       }, { emitEvent: false });
-    });
+    });*/
   }
 
   calculateDiscountedItemPrice(item: IOrderItem | IProduct , discount) {
@@ -446,6 +494,30 @@ export class EditOrderComponent implements OnInit {
     } else {
       return false;
     }
+  }
+
+  printDialog(): void {
+    const id = this.activatedRoute.snapshot.paramMap.get('id');
+    console.log(id);
+    this.printService.printDocument('receipt', id);
+  }
+
+  openCommentsPanel(order) {
+    const dialogRef = this.dialog.open(OrderCommentsComponent, {
+      data: order,
+      width: '60%'
+    });
+    return dialogRef.afterClosed();
+  }
+
+  onSetOrderComments() {
+    const order = this.orderForm.value;
+    console.log(order);
+    this.openCommentsPanel(order).subscribe((comments) => {
+      this.orderForm.patchValue({
+        comments: comments
+      });
+    });
   }
 
   onSubmit() {

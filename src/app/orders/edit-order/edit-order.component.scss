@@ -17,6 +17,11 @@
     margin: 1em;
 }
 
+.customer-form {
+    display: flex;
+    flex-wrap: nowrap;
+}
+
 .customer-title {
     width: 100%;
     flex-basis: 100%;
@@ -41,11 +46,76 @@
     flex-basis: 100%;
 }
 
-.actions-container {
+.address-container{
     display: flex;
     flex-wrap: wrap;
+    width: 100%;
+}
+
+.street-container {
+    display: flex;
+    flex-wrap: nowrap;
+    width: 100%;
+}
+
+.city-container {
+    display: flex;
+    flex-wrap: nowrap;
+    width: 100%;
+}
+
+.street-field {
+    width: 80%;
+    padding-right: 0.5em;
+}
+
+.house-field {
+    width: 20%;
+}
+
+.city-field {
+    padding-right: 0.5em;
+}
+
+.full-width-field {
+    flex-basis: 100%;
+}
+
+.half-width-field {
+    flex-basis: 50%;
+}
+
+.country-container {
+    display: flex;
+    flex-wrap: nowrap;
+    width: 100%;
+}
+
+.country-field {
+    width: 70%;
+    padding-right: 0.5em;
+}
+
+.zipcode-field {
+    width: 30%;
+    padding-right: 0.5em;
+}
+
+.phone-container {
+    display: flex;
+    flex-wrap: nowrap;
+    width: 100%;
+}
+
+.phone-field {
+    padding-right: 0.5em;
+}
+
+.actions-container {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
     flex-basis: 30%;
-    align-items: center;
     padding: 1em;
     margin: 1em;
 }
@@ -81,6 +151,10 @@
 .filter-product {
     display: flex;
     flex-wrap: nowrap;
+}
+
+.product-sub {
+    font-size: 80%;
 }
 
 .items-line {

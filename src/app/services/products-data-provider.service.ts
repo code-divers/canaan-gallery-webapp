@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { IProduct } from '../orders/order-interface';
+import { IProduct } from '../order-interface';
 import { AngularFirestore } from '@angular/fire/firestore';
 import * as Fuse from 'fuse.js';
 import { BehaviorSubject } from 'rxjs';

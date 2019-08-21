@@ -4,15 +4,17 @@ import { FormControl, FormArray, FormBuilder, Validators, FormGroup } from '@ang
 import { AngularFirestore, AngularFirestoreCollection } from '@angular/fire/firestore';
 import { AngularFireFunctions } from '@angular/fire/functions';
 import { Observable, BehaviorSubject, combineLatest, of } from 'rxjs';
-import { IOrder, ICustomer, IProduct, IOrderItem } from '../order-interface';
-import { switchMap, map, catchError, } from 'rxjs/operators';
+import { IOrder, ICustomer, IProduct, IOrderItem } from '../../order-interface';
+import { switchMap, catchError, } from 'rxjs/operators';
 import { MatDialog } from '@angular/material';
 import { MatAutocomplete, MatAutocompleteTrigger, MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { ItemDetailsComponent } from '../item-details/item-details.component';
+import { OrderCommentsComponent } from '../order-comments/order-comments.component';
 import { ICurrency } from '../../services/currency-api.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { CustomersDataProviderService } from '../../services/customers-data-provider.service';
 import { ProductsDataProviderService } from '../../services/products-data-provider.service';
+import { NominatimService } from '../../services/nominatim.service';
 import { environment } from 'src/environments/environment';
 
 
@@ -37,6 +39,7 @@ export class NewOrderComponent implements OnInit {
   customers: Observable<ICustomer[]>;
   isCustomersLoading: BehaviorSubject<boolean> = new BehaviorSubject(false);
   customerFilter: BehaviorSubject<string|null>;
+  addresses: [];
 
   shipping: IProduct;
   products: Observable<IProduct[]>;
@@ -60,7 +63,8 @@ export class NewOrderComponent implements OnInit {
     private activatedRoute: ActivatedRoute,
     private snackBar: MatSnackBar,
     private customerDataProvider: CustomersDataProviderService,
-    private productsDataprovider: ProductsDataProviderService) {
+    private productsDataprovider: ProductsDataProviderService,
+    private nominatim: NominatimService) {
 
   }
 
@@ -108,6 +112,8 @@ export class NewOrderComponent implements OnInit {
         id: [null],
         name: ['', Validators.required],
         address: [''],
+        street: [''],
+        house: [''],
         city: [''],
         state: [''],
         country: [''],
@@ -117,7 +123,8 @@ export class NewOrderComponent implements OnInit {
         currency: [''],
         isExport: ['']
       }),
-      items: this.fb.array([])
+      items: this.fb.array([]),
+      comments: ['']
     });
 
     this.orderForm.get('shipping').valueChanges.subscribe((shipping) => {
@@ -138,18 +145,7 @@ export class NewOrderComponent implements OnInit {
       const currentPrice = this.summerizeItemsPrice(items);
       this.orderForm.patchValue({
         discount: ((currentPrice - price) / currentPrice) * 100
-      }, { emitEvent: false });
-    });
-
-    this.orderForm.get('discount').valueChanges.subscribe((discount) => {
-      const items = this.orderForm.get('items').value;
-      const shippingValue = this.orderForm.get('shipping').value;
-      const price = this.summerizeItemsPrice(items, discount);
-      const subtotal = price + shippingValue;
-      this.orderForm.patchValue({
-        price: price,
-        subtotal: subtotal
-      }, { emitEvent: false });
+      });
     });
 
     (<FormControl>(<FormGroup>this.orderForm.get('customer')).controls['isExport']).valueChanges.subscribe((value) => {
@@ -196,6 +192,8 @@ export class NewOrderComponent implements OnInit {
         id: null,
         name: '',
         address: '',
+        street: '',
+        house: '',
         city: '',
         state: '',
         country: '',
@@ -206,6 +204,41 @@ export class NewOrderComponent implements OnInit {
         isExport: false
       }
     });
+  }
+
+  validateAddress() {
+    this.addresses = [];
+    const address = this.orderForm.get('customer.address').value;
+    this.nominatim.searchAddress(address).subscribe((result: any) => {
+      if (result.length === 0) {
+        this.snackBar.open('Address does not exist', null, {
+          duration: 3000
+        });
+      } else if (result.length === 1) {
+        this.setAddressComponents(result[0]);
+      } else {
+        this.addresses = result;
+      }
+    });
+  }
+
+  onAddressSelect($event) {
+    this.setAddressComponents($event.value);
+  }
+
+  setAddressComponents(components: any) {
+    this.orderForm.patchValue({
+      customer: {
+        address: components.display_name,
+        street: components.address.street || components.address.road,
+        house: components.address.house_number,
+        city: components.address.city,
+        state: components.address.state,
+        country: components.address.country,
+        zipcode: components.address.postcode
+      }
+    });
+    this.addresses = [];
   }
 
   onCurrencyChange(currency) {
@@ -268,8 +301,9 @@ export class NewOrderComponent implements OnInit {
     items.forEach(item => {
       price += item.discountedPrice;
     });
-
-    price = price - (price * (discount / 100));
+    if (discount) {
+      price = price - (price * (discount / 100));
+    }
     return Math.ceil(price);
   }
 
@@ -301,9 +335,26 @@ export class NewOrderComponent implements OnInit {
     }
   }
 
+  onSetOrderComments() {
+    this.openCommentsPanel(this.orderForm).subscribe((comments) => {
+      this.orderForm.patchValue({
+        comments: comments
+      });
+    });
+  }
+
   openDetailsPanel(item) {
     const dialogRef = this.dialog.open(ItemDetailsComponent, {
-      data: item.value
+      data: item.value,
+      width: '60%'
+    });
+    return dialogRef.afterClosed();
+  }
+
+  openCommentsPanel(order) {
+    const dialogRef = this.dialog.open(OrderCommentsComponent, {
+      data: order.value,
+      width: '60%'
     });
     return dialogRef.afterClosed();
   }
@@ -335,7 +386,7 @@ export class NewOrderComponent implements OnInit {
       const currentPrice = this.calculateProductPrice(product);
       formGroup.patchValue({
         discount: ((currentPrice - value) / currentPrice) * 100
-      }, { emitEvent: false });
+      });
     });
 
     formGroup.get('quantity').valueChanges.subscribe((quantity) => {
@@ -346,12 +397,13 @@ export class NewOrderComponent implements OnInit {
       }, { emitEvent: false });
     });
 
-    formGroup.get('discount').valueChanges.subscribe((discount) => {
+    /* formGroup.get('discount').valueChanges.subscribe((discount) => {
       const newPrice = this.calculateProductPrice(product, discount);
       formGroup.patchValue({
         discountedPrice: newPrice
       }, { emitEvent: false });
-    });
+    });*/
+    
     if (details) {
       this.addItemDetails(formGroup, details);
     }
@@ -443,7 +495,7 @@ export class NewOrderComponent implements OnInit {
 
   isItemDetails(item: FormGroup){
     const details = item.get('details').value;
-    if (details === null){
+    if (details === null) {
       return false;
     }
     if (details.studio) {
