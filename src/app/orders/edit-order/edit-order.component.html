@@ -155,13 +155,13 @@
                   <div class="item-name">#{{item.get('id').value}} - {{item.get('name').value}}</div>
                   <div class="item-name">
                     <a class="hand" [ngClass]="{discounted: item.get('discount').value }" *ngIf="!item.get('isEditDiscount').value" (click)="toggleItemDiscount(item)">{{item.get('price').value | currency: getCurrency().id : 'symbol' : '1.0' }}</a>
-                    <div *ngIf="!item.get('isEditDiscount').value && item.get('discount').value > 0">{{ item.get('discountedPrice').value | currency: getCurrency().id : 'symbol' : '1.0' }}</div>
+                    <div *ngIf="!item.get('isEditDiscount').value && item.get('discount').value != 0">{{ item.get('discountedPrice').value | currency: getCurrency().id : 'symbol' : '1.0' }}</div>
                     <button (click)="toggleItemDiscount(item)" mat-icon-button aria-label="Approve edit" *ngIf="item.get('isEditDiscount').value">
                       <mat-icon>done</mat-icon>
                     </button>
                     <mat-form-field class="price-input" *ngIf="item.get('isEditDiscount').value">
                         <mat-label>price</mat-label>
-                        <input matInput type="number" formControlName="discountedPrice" min="0" step="1">
+                        <input matInput type="number" formControlName="discountedPrice" min="0" step="1" (blur)="toggleItemDiscount(item)">
                         <span matSuffix>{{ ( 0 | currency : getCurrency().id : 'symbol-narrow' ) | slice:0:1 }}</span>
                     </mat-form-field>
                     <!--mat-form-field class="discount-input" *ngIf="item.get('isEditDiscount').value">
@@ -169,7 +169,7 @@
                         <input matInput type="number" formControlName="discount" placeholder="0" size="3" min="0" max="100" step="1">
                         <span matSuffix>%</span>
                     </mat-form-field-->
-                    <div *ngIf="!item.get('isEditDiscount').value && item.get('discount').value > 0">(-{{item.get('discount').value / 100 | percent}})</div>
+                    <div *ngIf="!item.get('isEditDiscount').value && item.get('discount').value != 0">({{item.get('discount').value / 100 | percent}} off)</div>
                   </div>
                   <mat-form-field class="item-quantity">
                     <mat-label>quantity</mat-label>

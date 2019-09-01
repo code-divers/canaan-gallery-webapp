@@ -2,11 +2,12 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { SelectionModel } from '@angular/cdk/collections';
 import { AngularFirestore, AngularFirestoreCollection } from '@angular/fire/firestore';
-import { Observable, BehaviorSubject, combineLatest } from 'rxjs';
+import { Observable, BehaviorSubject, combineLatest, of } from 'rxjs';
 import { switchMap, take } from 'rxjs/operators';
 import { IOrder } from '../../order-interface';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
+import { MatPaginator } from '@angular/material/paginator';
 import { PrintService } from '../../services/print.service';
 import { OrdersDataProviderService } from '../../services/orders-data-provider.service';
 import { ICurrency } from 'src/app/services/currency-api.service';
@@ -29,6 +30,7 @@ export class OrderListComponent implements OnInit {
   selection = new SelectionModel<IOrder>(true, []);
 
   @ViewChild(MatSort) sort: MatSort;
+  @ViewChild(MatPaginator, {}) paginator: MatPaginator;
 
   constructor(
     private readonly afs: AngularFirestore,
@@ -49,11 +51,16 @@ export class OrderListComponent implements OnInit {
     this.ordersCollection = this.afs.collection<IOrder>('orders');
     this.orders =  combineLatest(this.nameFilter).pipe(
       switchMap(([name]) => {
-        const observer = this.ordersDataService.fetchOrders(name);
+        if(name){
+          const list = this.ordersDataService.search(name);
+          return of(list);
+        }
+        const observer = this.ordersDataService.fetchOrders();
         return observer;
       })
     );
 
+    this.dataSource.paginator = this.paginator;
     this.orders.subscribe(items => {
       this.dataSource.data = items;
     });

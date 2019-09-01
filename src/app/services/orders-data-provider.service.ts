@@ -17,6 +17,9 @@ export class OrdersDataProviderService {
 
   constructor(
     private readonly afs: AngularFirestore) {
+      this.fetchOrders().subscribe((list) => {
+        this.applyFuse(list);
+      });
   }
 
   fetchOrders(query?) {
@@ -25,46 +28,21 @@ export class OrdersDataProviderService {
       ref.orderBy('created', 'desc');
       return ref;
     }).snapshotChanges().pipe(map(response => {
-      let ids = [];
-      if (query) {
-        ids = this.search(query);
-      }
-      const newlist = response.map(item => {
-        if (ids.length > 0 && ids.indexOf(item.payload.doc.id) === -1) {
-            return null;
-        }
-        const newItem = item.payload.doc.data();
-        newItem.id = item.payload.doc.id;
-        const customerAddress = newItem['customerAddress'] = [];
-        if (newItem.customer.address) {
-          customerAddress.push(newItem.customer.address);
-        }
-        if (newItem.customer.city) {
-          customerAddress.push(newItem.customer.city);
-        }
-        if (newItem.customer.country) {
-          customerAddress.push(newItem.customer.country);
-        }
+      const list = response.map(body => {
+        const newItem = body.payload.doc.data();
+        newItem.id = body.payload.doc.id;
         return newItem;
-      }).filter(item => item != null).sort( (a: IOrder, b: IOrder) => {
+      });
+      this.loadingStatus.next(false);
+      return list.sort( (a: IOrder, b: IOrder) => {
         return b.created.toDate() - a.created.toDate();
       });
-
-      let list = newlist;
-      if (ids.length > 0) {
-        list = ids.map((id) => newlist.find(order => order.id === id));
-      } else {
-        this.applyFuse(list);
-      }
-      this.loadingStatus.next(false);
-      return list;
     }));
   }
 
   applyFuse(list) {
     this.fuse = new Fuse(list, {
-      keys: ['comaxDocNumber', 'customer.name'],
-      id: 'id'
+      keys: ['comaxDocNumber', 'customer.name']
     });
   }
 

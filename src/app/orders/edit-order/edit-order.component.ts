@@ -275,7 +275,6 @@ export class EditOrderComponent implements OnInit {
     const isExport =  (<FormGroup>this.orderForm.get('customer')).get('isExport').value;
     const currency = this.getCurrency();
     let price = product.price;
-    console.log('price', price);
     price = price / currency.rate;
     price = price - (price * (Number(discount) / 100));
     if (isExport) {
@@ -381,11 +380,16 @@ export class EditOrderComponent implements OnInit {
 
   subscribeItem(formGroup: FormGroup, product: IProduct | IOrderItem) {
     formGroup.get('discountedPrice').valueChanges.subscribe((value) => {
+      value = value || 0;
       const currentPrice = formGroup.get('price').value;
-      console.log(currentPrice);
       formGroup.patchValue({
         discount: ((currentPrice - value) / currentPrice) * 100
       });
+      if (value === 0) {
+        formGroup.patchValue({
+          discountedPrice: 0
+        }, { emitEvent: false });
+      }
     });
 
     formGroup.get('quantity').valueChanges.subscribe((quantity) => {
@@ -498,7 +502,6 @@ export class EditOrderComponent implements OnInit {
 
   printDialog(): void {
     const id = this.activatedRoute.snapshot.paramMap.get('id');
-    console.log(id);
     this.printService.printDocument('receipt', id);
   }
 
@@ -512,7 +515,6 @@ export class EditOrderComponent implements OnInit {
 
   onSetOrderComments() {
     const order = this.orderForm.value;
-    console.log(order);
     this.openCommentsPanel(order).subscribe((comments) => {
       this.orderForm.patchValue({
         comments: comments

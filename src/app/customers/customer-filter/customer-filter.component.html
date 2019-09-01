@@ -1,0 +1,15 @@
+<mat-form-field class="full-width-field">
+  <mat-chip-list #customerChipList aria-label="Customer selection" multiple="false" >
+      <mat-chip *ngIf="selectedCustomer" removable="true"
+      (removed)="removeCustomer()">
+      #{{selectedCustomer.id}} - {{selectedCustomer.name | titlecase}}
+      <mat-icon matChipRemove >cancel</mat-icon>
+    </mat-chip>
+    <input matInput #customerNameInput [formControl]="filterCustomerInput" type="text" placeholder="First name and Last name" [matAutocomplete]="customerNameAuto" [matChipInputFor]="customerChipList" matChipInputAddOnBlur="true" formControlName="name" required>
+  </mat-chip-list>
+  <mat-autocomplete #customerNameAuto (optionSelected)="onCustomerSelect($event)">
+    <mat-option *ngFor="let customer of customers | async" [value]="customer">
+      #{{ customer.id }}-{{ customer.name | titlecase}}
+    </mat-option>
+  </mat-autocomplete>
+</mat-form-field>

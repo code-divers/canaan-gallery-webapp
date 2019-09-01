@@ -4,8 +4,10 @@ import { ICustomer } from '../../order-interface';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 import { SelectionModel } from '@angular/cdk/collections';
-import { BehaviorSubject, combineLatest } from 'rxjs';
-import { switchMap, startWith } from 'rxjs/operators';
+import { BehaviorSubject, combineLatest, of } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
+import { FormControl } from '@angular/forms';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'customer-list',
@@ -18,27 +20,41 @@ export class CustomerListComponent implements OnInit {
   columnsToDisplay = ['select', 'number', 'name', 'email', 'phone', 'address', 'star'];
   selection = new SelectionModel<ICustomer>(true, []);
   nameFilter: BehaviorSubject<string|null> = new BehaviorSubject(null);
+  filterInput: FormControl = new FormControl();
 
   @ViewChild(MatPaginator, {}) paginator: MatPaginator;
 
   constructor(
-    private customerDataProviver: CustomersDataProviderService
+    private customerDataProviver: CustomersDataProviderService,
+    private router: Router
   ) {
     this.dataSource.data = [];
   }
 
   ngOnInit() {
     this.dataSource.paginator = this.paginator;
+
     const customers = combineLatest(this.nameFilter).pipe(
       switchMap(([name]) => {
-        const observer = this.customerDataProviver.fetchCustomers();
-        return observer;
+        if (!name) {
+          return this.customerDataProviver.fetchCustomers();
+        }
+        const list = this.customerDataProviver.search(name);
+        return of(list);
       })
     );
     customers.subscribe((list) => {
-      console.log(list);
-        this.dataSource.data = list;
+      this.dataSource.data = list;
     });
+
+    this.filterInput.valueChanges.subscribe(query => {
+      this.nameFilter.next(query);
+    });
+    this.nameFilter.next(null);
+  }
+
+  onAddNew() {
+    this.router.navigate(['customers/lead']);
   }
 
   formatAddress(customer: ICustomer) {

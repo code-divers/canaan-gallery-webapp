@@ -27,6 +27,7 @@ export interface IOrder {
     zipcode: string;
     currency: string;
     isExport: boolean;
+    lastUpdate?: any;
   }
 
   export interface IProduct {

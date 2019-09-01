@@ -88,8 +88,8 @@ export class NewOrderComponent implements OnInit {
       if (!name) {
         return of([]);
       }
-      const customers = this.customerDataProvider.search(name);
-      return of(customers);
+      const list = this.customerDataProvider.search(name);
+      return of(list);
     }));
 
     this.productsFilter = new BehaviorSubject(null);
@@ -383,10 +383,16 @@ export class NewOrderComponent implements OnInit {
     });
 
     formGroup.get('discountedPrice').valueChanges.subscribe((value) => {
+      value = value || 0;
       const currentPrice = this.calculateProductPrice(product);
       formGroup.patchValue({
         discount: ((currentPrice - value) / currentPrice) * 100
       });
+      if (value === 0) {
+        formGroup.patchValue({
+          discountedPrice: 0
+        }, { emitEvent: false });
+      }
     });
 
     formGroup.get('quantity').valueChanges.subscribe((quantity) => {

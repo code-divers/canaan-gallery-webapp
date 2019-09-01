@@ -16,10 +16,9 @@ export class ProductsDataProviderService {
 
   constructor(
     private readonly afs: AngularFirestore) {
-      if (!this.fuse) {
-        this.fetchProducts().subscribe(() => {
-        });
-      }
+      this.fetchProducts().subscribe((list) => {
+        this.applyFuse(list);
+      });
   }
 
   fetchProducts() {
@@ -30,12 +29,15 @@ export class ProductsDataProviderService {
         newItem.id = body.payload.doc.id;
         return newItem;
       });
-      this.fuse = new Fuse(products, {
-        keys: ['id', 'name'],
-      });
       this.loadingStatus.next(false);
       return products;
     }));
+  }
+
+  applyFuse(list) {
+    this.fuse = new Fuse(list, {
+      keys: ['id', 'name'],
+    });
   }
 
   search(query) {
