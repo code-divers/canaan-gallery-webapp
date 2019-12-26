@@ -1,0 +1,64 @@
+<div class="order-container" *ngIf="order!=null">
+    <div class="head-container">
+        <div class="customer-details">
+          <h3>SOLD TO:</h3>
+          <div>{{ order.customer.name | titlecase }}</div>
+          <div>
+            {{ formatAddress(order) }}</div>
+          <div>{{ order.customer.country | titlecase }}</div>
+          <div>Phone: {{ order.customer.phone }}</div>
+          <div>Email: {{ order.customer.email }}</div>
+        </div>
+        <div class="order-details">
+          <div>{{order.created.toDate() | date: 'dd/MM/yyyy HH:mm'}}</div>
+          <div>Invoice #{{order.comaxReciptDocNumber}}</div>
+          <div>Order #{{order.comaxDocNumber}}</div>
+        </div>
+    </div>
+    <div class="items-container">
+      <div class="item" *ngFor="let item of order.items">
+        <div class="item-line">
+            <div class="item-quantity">{{ item.quantity }}</div>
+            <div class="item-name">{{ item.name }}</div>
+            <div class="item-price">{{ item.discountedPrice | currency: order.customer.currency : 'symbol' : '1.0'}}</div>
+            <div class="item-details" *ngIf="item.details && item.details.comment">
+                    {{ item.details.comment }}
+            </div>
+            <div class="item-details" *ngIf="item.details && item.details.studio">
+              <table class="studio-details">
+                <tr>
+                  <td colspan="2">{{ item.details.studio.atara }}</td>
+                </tr>
+                <tr>
+                  <td>{{ item.details.studio.corners.topLeft }}</td>
+                  <td>{{ item.details.studio.corners.topRight }}</td>
+                </tr>
+                <tr>
+                  <td>{{ item.details.studio.corners.bottomLeft }}</td>
+                  <td>{{ item.details.studio.corners.bottomRight }}</td>
+                </tr>
+              </table>
+            </div>
+        </div>
+        <mat-divider class="item-divider"></mat-divider>
+      </div>
+    </div>
+    <div *ngIf="order.comments" class="comments-container">
+      Comments: {{order.comments}}
+    </div>
+    <div *ngIf="order.tags && order.tags.length > 0" class="tags-container">
+      Tags: {{ order.tags.join(', ') }}
+    </div>
+    <div class="footer-container">
+      <div class="info-box">
+          <div >Thank you for placing your order with us.<br>We hope to see you again</div>
+          <div>Dear client please note:<br>Your order will be hand wovan especially for you, it will take 40 days until you recive it to your home.</div>
+      </div>
+      <div class="order-summary">
+        <div>SUBTOTAL: {{ order.price | currency: order.customer.currency : 'symbol' : '1.0'  }}</div>
+        <div>SHIPPING: {{ order.shipping | currency: order.customer.currency : 'symbol' : '1.0'  }}</div>
+        <div>TOTAL PRICE: {{ order.subtotal | currency: order.customer.currency : 'symbol' : '1.0'  }}</div>
+      </div>
+    </div>
+  </div>
+  

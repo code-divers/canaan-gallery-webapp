@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import { IOrder } from '../order-interface';
 import { AngularFirestore } from '@angular/fire/firestore';
+import { AngularFireFunctions } from '@angular/fire/functions';
 import * as Fuse from 'fuse.js';
 import { BehaviorSubject } from 'rxjs';
-import { map, take } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 
 const MAX_SEARCH_RESULTS = 100;
 
@@ -16,7 +17,8 @@ export class OrdersDataProviderService {
   loadingStatus: BehaviorSubject<boolean> = new BehaviorSubject(false);
 
   constructor(
-    private readonly afs: AngularFirestore) {
+    private readonly afs: AngularFirestore,
+    private fns: AngularFireFunctions) {
       this.fetchOrders().subscribe((list) => {
         this.applyFuse(list);
       });
@@ -50,5 +52,10 @@ export class OrdersDataProviderService {
     const results = this.fuse.search(query);
     const count = results.length > MAX_SEARCH_RESULTS ? MAX_SEARCH_RESULTS : results.length;
     return results.slice(0, count);
+  }
+
+  setRecipt(order: IOrder) {
+    const callable = this.fns.httpsCallable('setOrderReceipt');
+    return callable(order);
   }
 }

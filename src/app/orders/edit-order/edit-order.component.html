@@ -5,7 +5,7 @@
   </div>
 </div>
 <div *ngIf="!orderLoding">
-    <form [formGroup]="orderForm" (ngSubmit)="onSubmit()" class="form-container">
+    <form [formGroup]="orderForm" class="form-container">
       <div class="top-container">
         <div formGroupName="customer" class="customer-container" [class.mat-elevation-z2]="true">
           <input type="hidden" formControlName="id">
@@ -22,7 +22,7 @@
                 </mat-form-field>
                 <div class="address-container">
                     <mat-form-field class="full-width-field">
-                      <input matInput type="text" formControlName="address" placeholder="Address">
+                      <input matInput type="text" formControlName="address" placeholder="Address" autocomplete="off">
                       <button matSuffix type="button" (click)="validateAddress()" mat-icon-button aria-label="Approve edit">
                           <mat-icon>done</mat-icon>
                       </button>
@@ -38,36 +38,36 @@
                 </div>
                 <div class="street-container">
                   <mat-form-field class="street-field">
-                      <input matInput type="text" formControlName="street" placeholder="Street">
+                      <input matInput type="text" formControlName="street" placeholder="Street" autocomplete="off">
                   </mat-form-field>
                   <mat-form-field class="house-field">
-                      <input matInput type="text" formControlName="house" placeholder="House">
+                      <input matInput type="text" formControlName="house" placeholder="House" autocomplete="off">
                   </mat-form-field>
                 </div>
                 <div class="city-container">
                     <mat-form-field class="half-width-field city-field">
-                        <input matInput type="text" formControlName="city" placeholder="City">
+                        <input matInput type="text" formControlName="city" placeholder="City" autocomplete="off">
                       </mat-form-field>
                       <mat-form-field class="half-width-field">
-                          <input matInput type="text" formControlName="state" placeholder="State">
+                          <input matInput type="text" formControlName="state" placeholder="State" autocomplete="off">
                       </mat-form-field>
                 </div>
               </div>
               <div class="side right">
                 <div class="country-container">
                   <mat-form-field class="country-field">
-                    <input matInput type="text" formControlName="country" placeholder="Country">
+                    <input matInput type="text" formControlName="country" placeholder="Country" autocomplete="off">
                   </mat-form-field>
                   <mat-form-field class="zipcode-field">
-                    <input matInput type="text" formControlName="zipcode" placeholder="Zipcode">
+                    <input matInput type="text" formControlName="zipcode" placeholder="Zipcode" autocomplete="off">
                   </mat-form-field>
                 </div>
                 <div class="phone-container">
                   <mat-form-field class="half-width-field phone-field">
-                    <input matInput type="tel" formControlName="phone" placeholder="Phone number">
+                    <input matInput type="tel" formControlName="phone" placeholder="Phone number" autocomplete="off">
                   </mat-form-field>
                   <mat-form-field class="half-width-field">
-                    <input matInput type="email" formControlName="email" placeholder="Email">
+                    <input matInput type="email" formControlName="email" placeholder="Email" autocomplete="off">
                   </mat-form-field>
                 </div>
                 <div>
@@ -86,19 +86,25 @@
         </div>
         <div class="actions-container" [class.mat-elevation-z2]="true">
             <div class="container-line">
-                {{ orderForm.get('created').value | date: 'dd/MM/yyyy HH:mm' }} <br> #{{ orderId }}
+                {{ orderForm.get('created').value | date: 'dd/MM/yyyy HH:mm' }}
             </div>
-            <div class="exchange-rate container-line">$: {{currency.rate | currency:'ILS'}} ({{currency.lastUpdate | date: 'dd/MM/yyyy'}})</div>
+            <div class="container-line">
+              Order #{{ orderId }}
+            </div>
+            <div class="container-line" *ngIf="reciptId">
+              Recipt #{{ reciptId }}
+            </div>
+            <div *ngIf="currency; let currency" class="exchange-rate container-line">$: {{currency.rate | currency:'ILS'}} ({{currency.lastUpdate | date: 'dd/MM/yyyy'}})</div>
             <div class="container-line">
                 <mat-form-field class="shipping-input">
                     <mat-label>Shipping</mat-label>
-                    <input matInput type="number" formControlName="shipping" min="0" step="1">
-                    <span matSuffix>{{ ( 0 | currency : getCurrency().id : 'symbol-narrow' ) | slice:0:1 }}</span>
+                    <input matInput type="number" formControlName="shipping" min="0" step="1" autocomplete="off">
+                    <span matSuffix>{{ ( 0 | currency : getCurrencyName() : 'symbol-narrow' ) | slice:0:1 }}</span>
                 </mat-form-field>
             </div>
             <div class="container-line">
               <div class="price-container">
-                  <div>Price: <a class="hand" (click)="toggleOrderDiscount()" *ngIf="!orderForm.get('isEditDiscount').value">{{orderForm.get('price').value | currency: getCurrency().id  : 'symbol' : '1.0' }}</a>&nbsp;
+                  <div>Price: <a class="hand" (click)="toggleOrderDiscount()" *ngIf="!orderForm.get('isEditDiscount').value">{{orderForm.get('price').value | currency: getCurrencyName()  : 'symbol' : '1.0' }}</a>&nbsp;
                   <span *ngIf="!orderForm.get('isEditDiscount').value && orderForm.get('discount').value > 0">(-{{orderForm.get('discount').value / 100 | percent}})</span>
                 </div>
                   <button (click)="toggleOrderDiscount()" mat-icon-button aria-label="Approve edit" *ngIf="orderForm.get('isEditDiscount').value">
@@ -106,28 +112,30 @@
                   </button>
                   <mat-form-field class="price-input" *ngIf="orderForm.get('isEditDiscount').value">
                       <mat-label>price</mat-label>
-                      <input matInput type="number" formControlName="price" min="0" step="1">
+                      <input matInput type="number" formControlName="price" min="0" step="1" autocomplete="off">
                       <span matSuffix></span>
                   </mat-form-field>
                   <mat-form-field class="discount-input" *ngIf="orderForm.get('isEditDiscount').value">
                       <mat-label>discount</mat-label>
-                      <input matInput type="number" formControlName="discount" placeholder="0" size="3" min="0" max="100" step="1">
+                      <input matInput type="number" formControlName="discount" placeholder="0" size="3" min="0" max="100" step="1" autocomplete="off">
                       <span matSuffix>%</span>
                   </mat-form-field>
               </div>
             </div>
             <div class="container-line">
-              Total: {{ orderForm.get('subtotal').value | currency: getCurrency().id : 'symbol' : '1.0' }}
+              Total: {{ orderForm.get('subtotal').value | currency: getCurrencyName() : 'symbol' : '1.0' }}
             </div>
             <div class="container-line">
               <button mat-raised-button type="button" [matMenuTriggerFor]="actionMenu">Other actions</button>
               <mat-menu #actionMenu="matMenu">
                 <button (click)="onSetOrderComments()" mat-menu-item>Comments</button>
-                <button (click)="printDialog()" mat-menu-item>Print for customer</button>
+                <button (click)="onSetOrderSketch()" mat-menu-item>Edit sketch</button>
+                <button (click)="printOrderDialog()" mat-menu-item>Print for customer</button>
+                <button (click)="printReciptDialog()" mat-menu-item>Create recipt</button>
               </mat-menu>
             </div>
             <div class="container-line">
-                <button mat-raised-button type="submit" [disabled]="!orderForm.valid">Update</button>
+                <button mat-raised-button type="button" [disabled]="!orderForm.valid" (click)="onSubmit()">Update</button>
             </div>
         </div>
       </div>
@@ -135,12 +143,12 @@
           <h3>Items</h3>       
           <mat-form-field class="filter-product-container">
             <div class="filter-product">
-                <input #productNameInput matInput [formControl]="filterProductsInput" type="text" placeholder="Search products by name or number" [matAutocomplete]="productNameAuto" matAutocompletePosition="above">
+                <input #productNameInput matInput [formControl]="filterProductsInput" type="text" placeholder="Search products by name or number" [matAutocomplete]="productNameAuto" matAutocompletePosition="above" autocomplete="off">
                 <mat-spinner *ngIf="isProductsLoading | async" strokeWidth="1" diameter="20"></mat-spinner>
             </div>
             <mat-autocomplete #productNameAuto [displayWith]="productFilterResult" (optionSelected)="onProductSelect($event)">
               <mat-option *ngFor="let product of products| async" [value]="product" class="product-option">
-                  <span class="product-sub">#{{ product.id }} </span><span class="product-sub">({{ calculateProductPrice(product) | currency: getCurrency().id : 'symbol' : '1.0' }})</span>-<span>{{ product.name }}</span>
+                  <span class="product-sub">#{{ product.id }} </span><span class="product-sub">({{ calculateProductPrice(product) | currency: getCurrencyName() : 'symbol' : '1.0' }})</span>-<span>{{ product.name }}</span>
               </mat-option>
             </mat-autocomplete>
           </mat-form-field>
@@ -154,26 +162,19 @@
                   </button>
                   <div class="item-name">#{{item.get('id').value}} - {{item.get('name').value}}</div>
                   <div class="item-name">
-                    <a class="hand" [ngClass]="{discounted: item.get('discount').value }" *ngIf="!item.get('isEditDiscount').value" (click)="toggleItemDiscount(item)">{{item.get('price').value | currency: getCurrency().id : 'symbol' : '1.0' }}</a>
-                    <div *ngIf="!item.get('isEditDiscount').value && item.get('discount').value != 0">{{ item.get('discountedPrice').value | currency: getCurrency().id : 'symbol' : '1.0' }}</div>
+                    <a class="hand"  *ngIf="!item.get('isEditDiscount').value" (click)="toggleItemDiscount(item)">{{item.get('discountedPrice').value | currency: getCurrencyName() : 'symbol' : '1.0' }}</a>
                     <button (click)="toggleItemDiscount(item)" mat-icon-button aria-label="Approve edit" *ngIf="item.get('isEditDiscount').value">
                       <mat-icon>done</mat-icon>
                     </button>
                     <mat-form-field class="price-input" *ngIf="item.get('isEditDiscount').value">
                         <mat-label>price</mat-label>
-                        <input matInput type="number" formControlName="discountedPrice" min="0" step="1" (blur)="toggleItemDiscount(item)">
-                        <span matSuffix>{{ ( 0 | currency : getCurrency().id : 'symbol-narrow' ) | slice:0:1 }}</span>
+                        <input matInput type="number" formControlName="discountedPrice" min="0" step="1" (blur)="toggleItemDiscount(item)" autocomplete="off">
+                        <span matSuffix>{{ ( 0 | currency : getCurrencyName() : 'symbol-narrow' ) | slice:0:1 }}</span>
                     </mat-form-field>
-                    <!--mat-form-field class="discount-input" *ngIf="item.get('isEditDiscount').value">
-                        <mat-label>discount</mat-label>
-                        <input matInput type="number" formControlName="discount" placeholder="0" size="3" min="0" max="100" step="1">
-                        <span matSuffix>%</span>
-                    </mat-form-field-->
-                    <div *ngIf="!item.get('isEditDiscount').value && item.get('discount').value != 0">({{item.get('discount').value / 100 | percent}} off)</div>
                   </div>
                   <mat-form-field class="item-quantity">
                     <mat-label>quantity</mat-label>
-                    <input matInput type="number" formControlName="quantity" placeholder="0" size="2">
+                    <input matInput type="number" formControlName="quantity" placeholder="0" size="2" autocomplete="off">
                   </mat-form-field>
                   <div class="item-details">
                     <div *ngIf="!isItemDetails(item)"><a class="hand" (click)="onItemDetailClick(item)">Add details</a></div>

@@ -1,0 +1,4 @@
+<div class="whiteboard-wrapper" *ngIf="order | async as order">
+  <h3>Edit sketch for order {{order.comaxDocnumber || order.id}}</h3>
+  <sketch (canvasSave)="onCanvasSave($event)" [imageName]="imageName | async" [bgUrl]="bgUrl"></sketch>
+</div>

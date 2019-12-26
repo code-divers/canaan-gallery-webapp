@@ -27,10 +27,9 @@
     "fuse.js": "^3.4.5",
     "hammerjs": "^2.0.8",
     "json2csv": "^4.5.2",
-    "ng2-canvas-whiteboard": "^3.0.4",
-    "ngx-print": "^1.2.0-beta.2",
     "rxjs": "~6.3.3",
     "tslib": "^1.9.0",
+    "xlsx": "^0.15.1",
     "zone.js": "~0.8.26"
   },
   "devDependencies": {

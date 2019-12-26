@@ -4,7 +4,7 @@
         <div class="comm-error">Loading...</div>
     </div>
 </div>
-<div *ngIf="isNotLoading() | async" [class.isPrinting]="printService.isPrinting">
+<div class="app-container" *ngIf="isNotLoading() | async" [class.isPrinting]="printService.isPrinting">
     <navigation-main></navigation-main>
     <router-outlet name="print"></router-outlet>
 </div>

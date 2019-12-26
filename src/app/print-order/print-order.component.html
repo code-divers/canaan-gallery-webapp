@@ -19,7 +19,7 @@
       <div class="item-line">
           <div class="item-quantity">{{ item.quantity }}</div>
           <div class="item-name">{{ item.name }}</div>
-          <div class="item-price"><div [ngClass]="{discounted: item.discount }">{{ item.price | currency: order.customer.currency : 'symbol' : '1.0'}}</div><div *ngIf="item.discount != 0">{{ item.discountedPrice | currency: order.customer.currency : 'symbol' : '1.0'}} ({{item.discount / 100 | percent}} off)</div></div>
+          <div class="item-price">{{ item.discountedPrice | currency: order.customer.currency : 'symbol' : '1.0'}}</div>
           <div class="item-details" *ngIf="item.details && item.details.comment">
                   {{ item.details.comment }}
           </div>
@@ -42,6 +42,12 @@
       <mat-divider class="item-divider"></mat-divider>
     </div>
   </div>
+  <div *ngIf="order.comments" class="comments-container">
+    Comments: {{order.comments}}
+  </div>
+  <div *ngIf="order.tags && order.tags.length > 0" class="tags-container">
+    Tags: {{ order.tags.join(', ') }}
+  </div>
   <div class="footer-container">
     <div class="info-box">
         <div >Thank you for placing your order with us.<br>We hope to see you again</div>
@@ -52,5 +58,8 @@
       <div>SHIPPING: {{ order.shipping | currency: order.customer.currency : 'symbol' : '1.0'  }}</div>
       <div>TOTAL PRICE: {{ order.subtotal | currency: order.customer.currency : 'symbol' : '1.0'  }}</div>
     </div>
+  </div>
+  <div *ngIf="order.sketchUrl">
+    <img [src]="order.sketchUrl">
   </div>
 </div>

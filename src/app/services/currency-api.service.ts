@@ -7,14 +7,16 @@ import { map, filter } from 'rxjs/operators';
   providedIn: 'root'
 })
 export class CurrencyApiService {
-  currencyArray: ICurrency[];
-  private currencyCollection: AngularFirestoreCollection<ICurrency>;
-  currencies: Observable<ICurrency[]>;
-  filteredCurrencies: Observable<ICurrency[]>;
 
-  constructor(private readonly afs: AngularFirestore) {
-    this.currencyCollection = afs.collection<ICurrency>('currencies');
-    this.currencies = this.currencyCollection.valueChanges().pipe(map((list) => {
+  constructor(private readonly afs: AngularFirestore) { }
+
+  fetchCurrencies() {
+    return this.afs.collection<ICurrency>('currencies').snapshotChanges().pipe(map((response) => {
+      const list = response.map(body => {
+        const newItem = body.payload.doc.data();
+        newItem.id = body.payload.doc.id;
+        return newItem;
+      });
       list.push({
         id: 'ILS',
         change: 0,
@@ -26,16 +28,14 @@ export class CurrencyApiService {
       });
       return list;
     }));
+  }
 
-    this.currencies.subscribe(value => {
-      this.currencyArray = value;
-    });
-
-    this.filteredCurrencies = this.currencies.pipe(map(list => {
-      return list.filter(value => {
-        return value.id === 'ILS' || value.id === 'USD';
+  fetchMainCurrencies(){
+    return this.fetchCurrencies().pipe(map(currencies=>{
+      return currencies.filter(currency=>{
+        return currency.id === 'USD' || currency.id === 'ILS'
       });
-    }));
+    }))
   }
 }
 

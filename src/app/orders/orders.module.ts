@@ -18,15 +18,16 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { OrdersRoutingModule } from './orders-routing.module';
 import { OrderListComponent } from './order-list/order-list.component';
 import { NewOrderComponent } from './new-order/new-order.component';
 import { ItemDetailsComponent } from './item-details/item-details.component';
 import { TruncatePipe } from '../truncate-pipe';
 import { EditOrderComponent } from './edit-order/edit-order.component';
-import { NgxPrintModule } from 'ngx-print';
 import { OrderCommentsComponent } from './order-comments/order-comments.component';
-import { CanvasWhiteboardModule } from 'ng2-canvas-whiteboard';
+import { SketchComponent } from '../sketch/sketch.component';
+import { OrderSketchComponent } from './order-sketch/order-sketch.component';
 
 @NgModule({
   declarations: [
@@ -35,7 +36,9 @@ import { CanvasWhiteboardModule } from 'ng2-canvas-whiteboard';
     ItemDetailsComponent,
     TruncatePipe,
     EditOrderComponent,
-    OrderCommentsComponent],
+    OrderCommentsComponent,
+    OrderSketchComponent,
+    SketchComponent],
   entryComponents: [
     ItemDetailsComponent, OrderCommentsComponent
   ],
@@ -59,9 +62,8 @@ import { CanvasWhiteboardModule } from 'ng2-canvas-whiteboard';
     MatProgressSpinnerModule,
     MatTooltipModule,
     MatSnackBarModule,
-    NgxPrintModule,
-    OrdersRoutingModule,
-    CanvasWhiteboardModule
+    MatSlideToggleModule,
+    OrdersRoutingModule
   ]
 })
 export class OrdersModule { }

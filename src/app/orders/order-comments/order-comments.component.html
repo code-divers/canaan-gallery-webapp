@@ -1,10 +1,35 @@
 <mat-dialog-content>
   <form [formGroup]="orderCommentsForm">
-      <mat-form-field class="comments-field">
-        <mat-label>Comments</mat-label>
-        <textarea matInput type="text" formControlName="comment" placeholder="Enter your comments" matTextareaAutosize matAutosizeMinRows="10"></textarea>
+    <mat-form-field class="comments-field">
+      <mat-label>Comments</mat-label>
+      <textarea matInput type="text" formControlName="comments" placeholder="Enter your comments" matTextareaAutosize matAutosizeMinRows="10"></textarea>
+    </mat-form-field>
+    <mat-form-field class="chip-list">
+        <mat-chip-list #chipList aria-label="Tag order">
+          <mat-chip
+            *ngFor="let tag of orderCommentsForm.get('tags').value"
+            [selectable]="true"
+            [removable]="true"
+            (removed)="removeTag(tag)">
+            {{tag}}
+            <mat-icon matChipRemove>cancel</mat-icon>
+          </mat-chip>
+          <input
+            placeholder="New tag..."
+            #tagsInput
+            [formControl]="tagsCtrl"
+            [matAutocomplete]="auto" 
+            [matChipInputFor]="chipList"
+            matChipInputAddOnBlur="false"
+            autocomplete="off">
+        </mat-chip-list>
+        <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selected($event)">
+          <mat-option *ngFor="let tag of tags | async" [value]="tag">
+            {{tag.name}}
+          </mat-option>
+        </mat-autocomplete>
       </mat-form-field>
-  </form>
+    </form>
 </mat-dialog-content>
 <mat-dialog-actions>
   <button mat-button mat-dialog-close>Cancel</button>

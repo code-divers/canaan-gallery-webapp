@@ -2,6 +2,7 @@
 export interface IOrder {
     id: string;
     comaxDocNumber?: number;
+    comaxReciptDocNumber?: number;
     created: any;
     price: number;
     discount: number;
@@ -11,6 +12,8 @@ export interface IOrder {
     customer: ICustomer;
     items: IOrderItem[];
     comments: any;
+    tags?: string[];
+    sketchUrl?: string;
   }
 
   export interface ICustomer {
@@ -35,6 +38,10 @@ export interface IOrder {
       name: string;
       price: number;
       group: string;
+      width?: number;
+      height?: number;
+      length?: number;
+      weight?: number;
   }
 
   export interface IProductGroup {
@@ -52,4 +59,13 @@ export interface IOrder {
     quantity: number;
     details?: any;
     group: string;
+    width?: number;
+    height?: number;
+    length?: number;
+    weight?: number;
+  }
+
+  export interface ITag {
+    id: string;
+    name: string;
   }

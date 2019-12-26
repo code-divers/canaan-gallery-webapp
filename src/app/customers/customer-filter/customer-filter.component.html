@@ -7,7 +7,7 @@
     </mat-chip>
     <input matInput #customerNameInput [formControl]="filterCustomerInput" type="text" placeholder="First name and Last name" [matAutocomplete]="customerNameAuto" [matChipInputFor]="customerChipList" matChipInputAddOnBlur="true" formControlName="name" required>
   </mat-chip-list>
-  <mat-autocomplete #customerNameAuto (optionSelected)="onCustomerSelect($event)">
+  <mat-autocomplete #customerNameAuto>
     <mat-option *ngFor="let customer of customers | async" [value]="customer">
       #{{ customer.id }}-{{ customer.name | titlecase}}
     </mat-option>

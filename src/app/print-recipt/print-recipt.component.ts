@@ -1,31 +1,29 @@
-import { Component, OnInit, AfterViewInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { IOrder } from '../order-interface';
 import { AngularFirestore } from '@angular/fire/firestore';
 import { PrintService } from '../services/print.service';
 
 @Component({
-  selector: 'print-order',
-  templateUrl: './print-order.component.html',
-  styleUrls: ['./print-order.component.scss']
+  selector: 'print-recipt',
+  templateUrl: './print-recipt.component.html',
+  styleUrls: ['./print-recipt.component.scss']
 })
-export class PrintOrderComponent implements OnInit, AfterViewInit {
+export class PrintReciptComponent implements OnInit {
   order: any = null;
   constructor(
     private route: ActivatedRoute,
     private readonly afs: AngularFirestore,
     private printService: PrintService) {
+
   }
 
-  ngOnInit(){
+  ngOnInit() {
     const id = this.route.snapshot.params['orderId'];
     this.afs.doc<IOrder>(`orders/${id}`).valueChanges().subscribe(order => {
       this.order = order;
+      this.printService.onDataReady();
     });
-  }
-
-  ngAfterViewInit() {
-    this.printService.onDataReady();
   }
 
   formatAddress(order: IOrder) {

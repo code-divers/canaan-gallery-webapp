@@ -13,6 +13,8 @@ import { OrderCommentsComponent } from '../order-comments/order-comments.compone
 import { ICurrency } from '../../services/currency-api.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ProductsDataProviderService } from '../../services/products-data-provider.service';
+import { OrdersDataProviderService } from '../../services/orders-data-provider.service';
+import { CurrencyApiService } from '../../services/currency-api.service';
 import { NominatimService } from '../../services/nominatim.service';
 import { PrintService } from '../../services/print.service';
 import { environment } from 'src/environments/environment.prod';
@@ -24,8 +26,9 @@ import { environment } from 'src/environments/environment.prod';
 })
 export class EditOrderComponent implements OnInit {
   currency: ICurrency;
-  currencies: ICurrency[];
+  currencies: ICurrency[] = [];
   orderId;
+  reciptId;
   orderDoc: AngularFirestoreDocument<IOrder>;
   order: Observable<IOrder>;
   ordersCollection: AngularFirestoreCollection<IOrder>;
@@ -66,19 +69,21 @@ export class EditOrderComponent implements OnInit {
     private activatedRoute: ActivatedRoute,
     private snackBar: MatSnackBar,
     private productsDataprovider: ProductsDataProviderService,
+    private ordersDataprovider: OrdersDataProviderService,
+    private currencyApi: CurrencyApiService, 
     private printService: PrintService,
     private nominatim: NominatimService) {
 
   }
 
   ngOnInit() {
-    this.activatedRoute.data.subscribe((res) => {
-      this.currencies = res.cres;
+    this.currencyApi.fetchMainCurrencies().subscribe(currencies=>{
+      this.currencies = currencies;
       this.currency = this.currencies.find(item => {
         return item.id === 'USD';
       });
-      this.shipping = res.sres;
-    });
+    })
+
     this.isOrderLoading.subscribe((value) => {
       this.orderLoding = value;
     });
@@ -113,11 +118,13 @@ export class EditOrderComponent implements OnInit {
         isExport: ['']
       }),
       items: this.fb.array([]),
-      comments: ['']
+      comments: [''],
+      tags: []
     });
     
     this.order.subscribe((result: IOrder) => {
       this.orderId = result.comaxDocNumber || id;
+      this.reciptId = result.comaxReciptDocNumber;
       if (result.created) {
         result.created = result.created.toDate();
       }
@@ -251,6 +258,11 @@ export class EditOrderComponent implements OnInit {
     }
   }
 
+  getCurrencyName(){
+    const currency = this.getCurrency();
+    return currency ? currency.id : 'USD';
+  }
+
   recalculateShipping(isShipping?) {
     this.orderForm.patchValue({
       shipping: this.getShippingPrice()
@@ -297,11 +309,12 @@ export class EditOrderComponent implements OnInit {
   recalculateItems() {
     const items = <FormArray>this.orderForm.controls['items'];
     for (const item of items.controls) {
+      const quantity = item.get('quantity').value;
       this.afs.doc<IProduct>(`products/${item.value.id}`).valueChanges().subscribe(product => {
         const price = this.calculateProductPrice(product);
         item.patchValue({
           price: price,
-          discountedPrice: price
+          discountedPrice: price * Number(quantity)
         });
       });
     }
@@ -344,6 +357,10 @@ export class EditOrderComponent implements OnInit {
       id: [item.id],
       name: [item.name],
       price: [item.price],
+      width: [item.width],
+      height: [item.height],
+      length: [item.length],
+      weight: [item.weight],
       discountedPrice: [item.discountedPrice],
       discount: [item.discount],
       isEditDiscount: [item.isEditDiscount],
@@ -364,6 +381,10 @@ export class EditOrderComponent implements OnInit {
       id: [product.id],
       name: [product.name],
       price: [price],
+      width: [product.width],
+      height: [product.height],
+      length: [product.length],
+      weight: [product.weight],
       discountedPrice: [price],
       discount: [0],
       isEditDiscount: [false],
@@ -382,9 +403,15 @@ export class EditOrderComponent implements OnInit {
     formGroup.get('discountedPrice').valueChanges.subscribe((value) => {
       value = value || 0;
       const currentPrice = formGroup.get('price').value;
+      let discount = 0;
+      if (currentPrice !== 0) {
+        discount = ((currentPrice - value) / currentPrice) * 100;
+      }
+
       formGroup.patchValue({
-        discount: ((currentPrice - value) / currentPrice) * 100
+        discount: discount
       });
+      
       if (value === 0) {
         formGroup.patchValue({
           discountedPrice: 0
@@ -393,9 +420,9 @@ export class EditOrderComponent implements OnInit {
     });
 
     formGroup.get('quantity').valueChanges.subscribe((quantity) => {
-      const newPrice = this.calculateProductPrice(product);
+      const currentPrice = formGroup.get('price').value;
       formGroup.patchValue({
-        price: newPrice * Number(quantity),
+        discountedPrice: currentPrice * Number(quantity),
         discount: 0
       }, { emitEvent: false });
     });
@@ -500,9 +527,20 @@ export class EditOrderComponent implements OnInit {
     }
   }
 
-  printDialog(): void {
+  printOrderDialog(): void {
     const id = this.activatedRoute.snapshot.paramMap.get('id');
-    this.printService.printDocument('receipt', id);
+    this.printService.printDocument('order', id);
+  }
+
+  printReciptDialog(): void {
+    this.isOrderLoading.next(true);
+    const order = <IOrder>this.orderForm.value;
+    console.log(order);
+    this.ordersDataprovider.setRecipt(order).subscribe
+    ((result) => {
+      this.isOrderLoading.next(false);
+      this.printService.printDocument('recipt', order.id);
+    });
   }
 
   openCommentsPanel(order) {
@@ -515,11 +553,17 @@ export class EditOrderComponent implements OnInit {
 
   onSetOrderComments() {
     const order = this.orderForm.value;
-    this.openCommentsPanel(order).subscribe((comments) => {
+    this.openCommentsPanel(order).subscribe((data) => {
       this.orderForm.patchValue({
-        comments: comments
+        comments: data.comments,
+        tags: data.tags
       });
     });
+  }
+
+  onSetOrderSketch() {
+    const id = this.activatedRoute.snapshot.paramMap.get('id');
+    this.router.navigate(['orders/sketch', id]);
   }
 
   onSubmit() {

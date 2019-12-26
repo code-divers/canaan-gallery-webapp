@@ -3,15 +3,23 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { SelectionModel } from '@angular/cdk/collections';
 import { AngularFirestore, AngularFirestoreCollection } from '@angular/fire/firestore';
 import { Observable, BehaviorSubject, combineLatest, of } from 'rxjs';
+import { map, first } from 'rxjs/operators';
 import { switchMap, take } from 'rxjs/operators';
-import { IOrder } from '../../order-interface';
+import { IOrder, IProduct } from '../../order-interface';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 import { PrintService } from '../../services/print.service';
 import { OrdersDataProviderService } from '../../services/orders-data-provider.service';
+import { CurrencyApiService } from '../../services/currency-api.service';
 import { ICurrency } from 'src/app/services/currency-api.service';
-import { Parser } from 'json2csv';
+import * as XLSX from 'xlsx';
+
+const NAME_FROM = 'Canaan Gallery';
+const TEL_FROM = '011-972-4697-4449';
+const EXCEL_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
+const EXCEL_EXTENSION = '.xlsx';
+const ITEM_SHIPMENT_NAME = 'Talit religious art';
 
 @Component({
   selector: 'order-list',
@@ -24,8 +32,10 @@ export class OrderListComponent implements OnInit {
   dataSource: MatTableDataSource<IOrder> = new MatTableDataSource();
   nameFilter: BehaviorSubject<string|null>;
   currency: ICurrency;
+  
+  isLoading: BehaviorSubject<boolean> = new BehaviorSubject(false);
 
-  columnsToDisplay = ['select', 'number', 'created', 'customer', 'price', 'shipping', 'subtotal', 'star'];
+  columnsToDisplay = ['select', 'number', 'created', 'customer', 'price', 'shipping', 'subtotal', 'tags', 'star'];
 
   selection = new SelectionModel<IOrder>(true, []);
 
@@ -36,17 +46,19 @@ export class OrderListComponent implements OnInit {
     private readonly afs: AngularFirestore,
     private router: Router,
     private printService: PrintService,
-    private activatedRoute: ActivatedRoute,
+    private currencyApiService: CurrencyApiService,
     private ordersDataService: OrdersDataProviderService) {
   }
 
   ngOnInit() {
-    this.activatedRoute.data.subscribe((res) => {
-      this.currency = res.cres.find((item => {
-        return item.id === 'USD';
-      }));
+    const currencies = this.currencyApiService.fetchCurrencies();
+    currencies.subscribe(result=>{
+      this.currency = result.find(value => {
+        return value.id == 'USD'
+      });
+      console.log(this.currency);
     });
-    
+
     this.nameFilter = new BehaviorSubject(null);
     this.ordersCollection = this.afs.collection<IOrder>('orders');
     this.orders =  combineLatest(this.nameFilter).pipe(
@@ -64,6 +76,12 @@ export class OrderListComponent implements OnInit {
     this.orders.subscribe(items => {
       this.dataSource.data = items;
     });
+  }
+
+  notIsloading() {
+    return this.isLoading.pipe(map(value => {
+      return !value;
+    }));
   }
 
   formatAddress(order: IOrder) {
@@ -93,7 +111,7 @@ export class OrderListComponent implements OnInit {
     this.nameFilter.next(filterValue);
   }
 
-  addNewOrder(){
+  addNewOrder() {
     this.router.navigate(['orders/new']);
   }
 
@@ -101,8 +119,45 @@ export class OrderListComponent implements OnInit {
     return order.customer.currency.toUpperCase();
   }
 
-  printDialog(order: IOrder): void {
-    this.printService.printDocument('receipt', order.id);
+  printOrder(order: IOrder): void {
+    this.printService.printDocument('order', order.id);
+  }
+
+  printRecipt(order: IOrder) {
+    this.isLoading.next(true);
+    this.ordersDataService.setRecipt(order).subscribe
+    ((result) => {
+      this.isLoading.next(false);
+      this.printService.printDocument('recipt', order.id);
+    });
+  }
+
+  isOrderTagged(order: IOrder, tag){
+    return order.tags && order.tags.indexOf(tag) > -1;
+  }
+
+  tagOrder(order: IOrder, tag) {
+    if (this.isOrderTagged(order, tag)) {
+      return;
+    }
+    if(!order.tags) {
+      order.tags = [];
+    }
+    order.tags.push(tag);
+    this.updateOrder(order);
+  }
+
+  removeOrderTag(order: IOrder, tag) {
+    const idx = order.tags.indexOf(tag);
+    order.tags.splice(idx, 1);
+    this.updateOrder(order);
+  }
+
+  updateOrder(order: IOrder) {
+    const doc = this.afs.doc<IOrder>(`orders/${order.id}`);
+    doc.update(order).then(result => {
+      console.log(result);
+    });
   }
 
   isSelected(order) {
@@ -115,7 +170,6 @@ export class OrderListComponent implements OnInit {
   }
 
   masterToggle() {
-    console.log(this.isAllSelected());
     this.isAllSelected() ?
         this.selection.clear() :
         this.dataSource.data.forEach(row => this.selection.select(row));
@@ -129,50 +183,27 @@ export class OrderListComponent implements OnInit {
   }
 
   exportToCSV() {
-    const csvData: any = this.generateExportCSV();
+    const csvData: any = this.generateExport();
     const a = document.createElement('a');
     a.setAttribute('style', 'display:none;');
     document.body.appendChild(a);
-    const blob = new Blob([csvData], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
+    const data: Blob = new Blob([csvData], {type: EXCEL_TYPE});
+    const url = window.URL.createObjectURL(data);
     a.href = url;
     const currentDate = new Date();
-    a.download = `orders-export-${currentDate.toDateString()}.csv`;
+    a.download = `orders-export-${currentDate.toDateString()}.${EXCEL_EXTENSION}`;
     a.click();
+    this.markShippedOrders();
   }
 
-  generateExportCSV() {
+  generateExport() {
     const orders = this.selection.selected;
     if (orders.length > 0) {
-      const fields = [
-        'NameTo',
-        'StreetTo',
-        'HomeNumber',
-        'CityTo',
-        'StateTo',
-        'CountryTo',
-        'ZipTo',
-        'EmailTo',
-        'TelTo',
-        'UserIntNo',
-        'Type'];
-  
-        orders.sort((a, b) => {
-          return a.items.length - b.items.length;
-        });
-        const maxOrderItems = orders[0].items.length;
-        console.log('maxOrderItems', maxOrderItems);
-        for (let i = 0; i < maxOrderItems; i++) {
-          fields.push(`Contents${i + 1}`);
-          fields.push(`Currency${i + 1}`);
-          fields.push(`Value${i + 1}`);
-          fields.push(`Quantity${i + 1}`);
-          fields.push(`CountryOfOrigin${ i + 1 }`);
-        }
         orders.sort((a, b) => {
           return a.comaxDocNumber - b.comaxDocNumber;
         });
-        const list = orders.map(order => {
+        const list = orders.map((order, idx) => {
+          const measures = this.calculatePackageMeasurments(order.items);
           const row: any = {
             NameTo: order.customer.name,
             StreetTo: order.customer.street,
@@ -184,22 +215,67 @@ export class OrderListComponent implements OnInit {
             EmailTo: order.customer.email,
             TelTo: order.customer.phone,
             UserIntNo: order.comaxDocNumber,
-            Type: 1
+            CompanyTo: '',
+            PositionTo: '',
+            ImporterRef: '',
+            ItemDesc: ITEM_SHIPMENT_NAME,
+            Type: 1,
+            Length: measures.length,
+            Height: measures.height,
+            Width: measures.width,
+            GrossWeight: measures.grossWeight,
+            IncludeIns: '',
+            ContValue: order.subtotal,
+            NameFrom: NAME_FROM,
+            TelFrom: TEL_FROM,
+            ShipmnetID: idx + 1
           };
-          let counter = 1;
-          for(const item of order.items){
-              row['Contents' + counter] = item.id;
-              row['Currency' + counter] = order.customer.currency;
-              row['Value' + counter] = item.discountedPrice;
-              row['Quantity' + counter] = item.quantity;
-              row['CountryOfOrigin' + counter] = 'IL';
-              counter++;
+          const maxOrderItems = order.items.length < 4 ? 4 : order.items.length;
+          for(let i=0; i < maxOrderItems; i++){
+            const counter = i+1;
+            let item = null;
+            if(order.items.length > i){
+              item = order.items[i]
+            }
+            
+            row['Contents' + counter] = item ?ITEM_SHIPMENT_NAME : '';
+            row['Currency' + counter] = item ? order.customer.currency : '';
+            row['Value' + counter] = item ? item.discountedPrice : '';
+            row['Quantity' + counter] = item ? item.quantity : '';
+            row['CountryOfOrigin' + counter] = item ? 'IL' : '';
+            row['Weight' + counter] = item ? item.weight : '';
+            row['HsTariff' + counter] = '';
           }
           return row;
         });
-        const json2csvParser = new Parser({ fields });
-        const csv = json2csvParser.parse(list);
-        return csv;
+        const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(list);
+        const workbook: XLSX.WorkBook = { Sheets: { 'data': worksheet }, SheetNames: ['data'] };
+        const excelBuffer: any = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+
+        return excelBuffer;
+    }
+  }
+
+  calculatePackageMeasurments(items: IProduct[]){
+    const measures = {
+      width: 0,
+      height: 0,
+      length: 0,
+      grossWeight: 0.1
+    }
+    for(const item of items){
+      measures.width = Number(item.width) > measures.width ? Number(item.width) : measures.width;
+      measures.height = Number(item.height) > measures.height ? Number(item.height) : measures.height;
+      measures.length = measures.length + Number(item.length);
+      measures.grossWeight = measures.grossWeight + Number(item.weight);
+    }
+    return measures;
+  }
+
+  async markShippedOrders() {
+    const orders = this.selection.selected;
+    for (const order of orders) {
+      await this.tagOrder(order, 'shipped');
     }
   }
 }

@@ -1,68 +1,97 @@
-<div class="actions-container">
-    <mat-form-field class="filter-input">
-      <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Search order by ID or customer name">
-    </mat-form-field>
-    <div class="actions-right">
-        <div class="exchange-rate">$: {{currency.rate | currency:'ILS'}} ({{currency.lastUpdate | date: 'dd/MM/yyyy'}})</div>
-        <button [disabled]="selection.selected.length == 0" mat-fab color="primary" (click)="exportToCSV()">
-            <mat-icon aria-label="Export to CSV">get_app</mat-icon>
-        </button>
-        <button mat-fab color="primary" (click)="addNewOrder()">
-            <mat-icon aria-label="Add new order">add</mat-icon>
-        </button>
-    </div>
+<div class="spinner-container" *ngIf="isLoading | async">
+  <div class="spinner-message-container">
+    <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
+    <div class="comm-error">Loading...</div>
+  </div>
 </div>
-<table mat-table [dataSource]="dataSource" matSort class="orders-list">
-  <ng-container matColumnDef="number">
-    <th mat-header-cell *matHeaderCellDef mat-sort-header> # </th>
-    <td mat-cell *matCellDef="let order"> <a [routerLink]="['/orders/edit', order.id]">{{order.comaxDocNumber || order.id}}</a> </td>
-  </ng-container>
-  <ng-container matColumnDef="select">
-      <th mat-header-cell *matHeaderCellDef>  
-          <mat-checkbox (change)="$event ? masterToggle() : null" [checked]="selection.hasValue() && isAllSelected()" [indeterminate]="selection.hasValue() && !isAllSelected()" [aria-label]="checkboxLabel()"></mat-checkbox>
-        </th>
-        <td mat-cell *matCellDef="let order">
-          <mat-checkbox (click)="$event.stopPropagation()" (change)="$event ? selection.toggle(order) : null" [checked]="isSelected(order)" [aria-label]="checkboxLabel(order)">
-          </mat-checkbox>
-        </td>
+<div *ngIf="notIsloading() | async">
+  <div class="actions-container">
+      <mat-form-field class="filter-input">
+        <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Search order by ID or customer name">
+      </mat-form-field>
+      <div class="actions-right">
+          <div *ngIf="currency; let currency" class="exchange-rate">$: {{currency.rate | currency:'ILS'}} ({{currency.lastUpdate | date: 'dd/MM/yyyy'}})</div>
+          <button [disabled]="selection.selected.length == 0" mat-fab color="primary" (click)="exportToCSV()">
+              <mat-icon aria-label="Export to CSV">get_app</mat-icon>
+          </button>
+          <button mat-fab color="primary" (click)="addNewOrder()">
+              <mat-icon aria-label="Add new order">add</mat-icon>
+          </button>
+      </div>
+  </div>
+  <table mat-table [dataSource]="dataSource" matSort class="orders-list">
+    <ng-container matColumnDef="number">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header> # </th>
+      <td mat-cell *matCellDef="let order"> <a [routerLink]="['/orders/edit', order.id]">{{order.comaxDocNumber || order.id | limitTo: 8}}</a> </td>
     </ng-container>
-  <ng-container matColumnDef="created">
-    <th mat-header-cell *matHeaderCellDef mat-sort-header> Created </th>
-    <td mat-cell *matCellDef="let order"> {{order.created.toDate() | date: 'dd/MM/yyyy HH:mm'}} </td>
-  </ng-container>
-  <ng-container matColumnDef="customer">
-    <th mat-header-cell *matHeaderCellDef mat-sort-header> Customer </th>
-    <td mat-cell *matCellDef="let order">{{order.customer.name}} ({{order.customer.id}}) {{ formatAddress(order) }} </td>
-  </ng-container>
-  <ng-container matColumnDef="price">
-    <th mat-header-cell *matHeaderCellDef> Price </th>
-    <td mat-cell *matCellDef="let order"> <div>{{order.price | currency:getOrderCurrency(order) : 'symbol' : '1.0'}}</div> </td>
-  </ng-container>
-  <ng-container matColumnDef="shipping">
-    <th mat-header-cell *matHeaderCellDef> Shipping </th>
-    <td mat-cell *matCellDef="let order">
-      {{order.shipping | currency:getOrderCurrency(order) : 'symbol' : '1.0'}}
-    </td>
-  </ng-container>
-  <ng-container matColumnDef="subtotal">
-    <th mat-header-cell *matHeaderCellDef> Subtotal </th>
-    <td mat-cell *matCellDef="let order"> {{order.subtotal | currency: getOrderCurrency(order) : 'symbol' : '1.0'}} </td>
-  </ng-container>
-  <!-- Star Column -->
-  <ng-container matColumnDef="star" stickyEnd>
-    <th mat-header-cell *matHeaderCellDef></th>
-    <td mat-cell *matCellDef="let order">
-        <button mat-icon-button (click)="printDialog(order)"><mat-icon>print</mat-icon></button>
-        <button mat-icon-button class="selection" aria-label="Actions" [matMenuTriggerFor]="actionMenu">
-        <mat-icon>more_vert</mat-icon>
-        <mat-menu #actionMenu="matMenu">
-          <button [routerLink]="['/orders/edit', order.id]" mat-menu-item>Edit order</button>
-          <button mat-menu-item (click)="printDialog(order)">Print for customer</button>
-        </mat-menu>
-        </button>
-    </td>
-  </ng-container>
-  <tr mat-header-row *matHeaderRowDef="columnsToDisplay"></tr>
-  <tr mat-row *matRowDef="let myRowData; columns: columnsToDisplay"></tr>
-</table>
-<mat-paginator [pageSizeOptions]="[50, 100, 300]" showFirstLastButtons></mat-paginator>
+    <ng-container matColumnDef="select">
+        <th mat-header-cell *matHeaderCellDef>  
+            <mat-checkbox (change)="$event ? masterToggle() : null" [checked]="selection.hasValue() && isAllSelected()" [indeterminate]="selection.hasValue() && !isAllSelected()" [aria-label]="checkboxLabel()"></mat-checkbox>
+          </th>
+          <td mat-cell *matCellDef="let order">
+            <mat-checkbox (click)="$event.stopPropagation()" (change)="$event ? selection.toggle(order) : null" [checked]="isSelected(order)" [aria-label]="checkboxLabel(order)">
+            </mat-checkbox>
+          </td>
+      </ng-container>
+    <ng-container matColumnDef="created">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header> Created </th>
+      <td mat-cell *matCellDef="let order"> {{order.created.toDate() | date: 'dd/MM/yyyy HH:mm'}} </td>
+    </ng-container>
+    <ng-container matColumnDef="customer">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header> Customer </th>
+      <td mat-cell *matCellDef="let order">{{order.customer.name}} ({{order.customer.id}}) {{ formatAddress(order) | limitTo: 40 }} </td>
+    </ng-container>
+    <ng-container matColumnDef="price">
+      <th mat-header-cell *matHeaderCellDef> Price </th>
+      <td mat-cell *matCellDef="let order"> <div>{{order.price | currency:getOrderCurrency(order) : 'symbol' : '1.0'}}</div> </td>
+    </ng-container>
+    <ng-container matColumnDef="shipping">
+      <th mat-header-cell *matHeaderCellDef> Shipping </th>
+      <td mat-cell *matCellDef="let order">
+        {{order.shipping | currency:getOrderCurrency(order) : 'symbol' : '1.0'}}
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="subtotal">
+      <th mat-header-cell *matHeaderCellDef> Subtotal </th>
+      <td mat-cell *matCellDef="let order"> {{order.subtotal | currency: getOrderCurrency(order) : 'symbol' : '1.0'}} </td>
+    </ng-container>
+    <ng-container matColumnDef="tags">
+        <th mat-header-cell *matHeaderCellDef> Tags </th>
+        <td mat-cell *matCellDef="let order">
+          <mat-chip-list #chipList aria-label="Tag order">
+              <mat-chip
+                *ngFor="let tag of order.tags"
+                [selectable]="false"
+                [removable]="true"
+                (removed)="removeOrderTag(order, tag)">
+                {{tag}}
+                <mat-icon matChipRemove >cancel</mat-icon>
+              </mat-chip>
+          </mat-chip-list>
+        </td>
+      </ng-container>
+    <!-- Star Column -->
+    <ng-container matColumnDef="star" stickyEnd>
+      <th mat-header-cell *matHeaderCellDef></th>
+      <td mat-cell *matCellDef="let order">
+        <div class="star-container">
+            <button mat-icon-button (click)="printOrder(order)"><mat-icon>print</mat-icon></button>
+            <button mat-icon-button class="selection" aria-label="Actions" [matMenuTriggerFor]="actionMenu">
+            <mat-icon>more_vert</mat-icon>
+            <mat-menu #actionMenu="matMenu">
+              <button [routerLink]="['/orders/edit', order.id]" mat-menu-item>Edit order</button>
+              <button [routerLink]="['/orders/sketch', order.id]" mat-menu-item>Draw sketch</button>
+              <button mat-menu-item (click)="printOrder(order)">Print for customer</button>
+              <button [disabled]="isOrderTagged(order, 'studio')" mat-menu-item (click)="tagOrder(order, 'studio')">Tag studio</button>
+              <button [disabled]="isOrderTagged(order, 'gallery')" mat-menu-item (click)="tagOrder(order, 'gallery')">Tag gallery</button>
+              <button [disabled]="isOrderTagged(order, 'shipped')" mat-menu-item (click)="tagOrder(order, 'shipped')">Tag shipped</button>
+            </mat-menu>
+            </button>
+        </div>
+      </td>
+    </ng-container>
+    <tr mat-header-row *matHeaderRowDef="columnsToDisplay"></tr>
+    <tr mat-row *matRowDef="let myRowData; columns: columnsToDisplay"></tr>
+  </table>
+  <mat-paginator [pageSizeOptions]="[50, 100, 300]" showFirstLastButtons></mat-paginator>
+</div>

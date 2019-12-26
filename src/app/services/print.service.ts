@@ -18,12 +18,13 @@ export class PrintService {
   }
 
   onDataReady() {
+    console.log('ready to print');
     setTimeout(() => {
       window.print();
-      setTimeout(() => {
+      setTimeout(()=>{
         this.isPrinting = false;
         this.router.navigate([{ outlets: { print: null }}]);
-      }, 1000);
-    });
+      }, 3000)
+    }, 1000);
   }
 }

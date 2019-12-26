@@ -4,7 +4,8 @@ import { HttpClientModule } from '@angular/common/http';
 
 import { AngularFireModule } from 'angularfire2';
 import { AngularFireDatabaseModule } from 'angularfire2/database';
-import { AngularFirestoreModule } from '@angular/fire/firestore';
+import { AngularFirestoreModule } from 'angularfire2/firestore';
+import { AngularFireStorageModule } from 'angularfire2/storage';
 import { AngularFireAuthModule } from 'angularfire2/auth';
 import { AngularFireFunctionsModule } from '@angular/fire/functions';
 
@@ -31,6 +32,7 @@ import { LoginComponent } from './login/login.component';
 import { PageNotFoundComponent } from './page-not-found/page-not-found.component';
 import { PrintLayoutComponent } from './print-layout/print-layout.component';
 import { PrintOrderComponent } from './print-order/print-order.component';
+import { PrintReciptComponent } from './print-recipt/print-recipt.component';
 
 @NgModule({
   declarations: [
@@ -39,7 +41,8 @@ import { PrintOrderComponent } from './print-order/print-order.component';
     PageNotFoundComponent,
     AppComponent,
     PrintLayoutComponent,
-    PrintOrderComponent
+    PrintOrderComponent,
+    PrintReciptComponent
   ],
   imports: [
     MatIconModule,
@@ -59,6 +62,7 @@ import { PrintOrderComponent } from './print-order/print-order.component';
     AngularFireAuthModule,
     AngularFireDatabaseModule,
     AngularFirestoreModule,
+    AngularFireStorageModule,
     AngularFireFunctionsModule,
     AppRoutingModule
   ],

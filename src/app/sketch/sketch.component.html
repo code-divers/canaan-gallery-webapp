@@ -1,0 +1,10 @@
+<div class="spinner-container" *ngIf="isLoading | async">
+    <div class="spinner-message-container">
+        <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
+        <div class="comm-error">Loading...</div>
+    </div>
+</div>
+<div class="canvas-wrapper" *ngIf="notIsLoading() | async">
+    <button mat-raised-button (click)="saveCanvas()">Save</button>
+    <canvas #canvas></canvas>
+</div>

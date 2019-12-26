@@ -3,7 +3,7 @@
       <input matInput [formControl]="filterInput" placeholder="Search customer by name, email or address">
     </mat-form-field>
     <div class="actions-right">
-        <button [disabled]="selection.selected.length == 0" mat-fab color="primary" (click)="exportToCSV()">
+        <button [disabled]="selection.selected.length == 0" mat-fab color="primary">
             <mat-icon aria-label="Export to CSV">get_app</mat-icon>
         </button>
         <button mat-fab color="primary" (click)="onAddNew()">
@@ -44,12 +44,14 @@
   <ng-container matColumnDef="star" stickyEnd>
       <th mat-header-cell *matHeaderCellDef></th>
       <td mat-cell *matCellDef="let customer">
-        <button mat-icon-button class="selection" aria-label="Actions" [matMenuTriggerFor]="actionMenu">
-          <mat-icon>more_vert</mat-icon>
-          <mat-menu #actionMenu="matMenu">
-            <button [routerLink]="['/customers/lead', customer.id]" mat-menu-item>Details</button>
-          </mat-menu>
-        </button>
+        <div class="star-container">
+            <button mat-icon-button class="selection" aria-label="Actions" [matMenuTriggerFor]="actionMenu">
+                <mat-icon>more_vert</mat-icon>
+                <mat-menu #actionMenu="matMenu">
+                  <button [routerLink]="['/customers/lead', customer.id]" mat-menu-item>Details</button>
+                </mat-menu>
+              </button>
+        </div>
       </td>
     </ng-container>
   <tr mat-header-row *matHeaderRowDef="columnsToDisplay"></tr>

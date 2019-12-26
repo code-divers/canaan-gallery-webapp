@@ -14,6 +14,7 @@ import { ICurrency } from '../../services/currency-api.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { CustomersDataProviderService } from '../../services/customers-data-provider.service';
 import { ProductsDataProviderService } from '../../services/products-data-provider.service';
+import { CurrencyApiService } from '../../services/currency-api.service';
 import { NominatimService } from '../../services/nominatim.service';
 import { environment } from 'src/environments/environment';
 
@@ -25,7 +26,7 @@ import { environment } from 'src/environments/environment';
 })
 export class NewOrderComponent implements OnInit {
   currency: ICurrency;
-  currencies: ICurrency[];
+  currencies: ICurrency[] = [];
   ordersCollection: AngularFirestoreCollection<IOrder>;
   orders: Observable<IOrder[]>;
   isOrderLoading: BehaviorSubject<boolean> = new BehaviorSubject(false);
@@ -47,6 +48,7 @@ export class NewOrderComponent implements OnInit {
   productsFilter: BehaviorSubject<string|null>;
 
   discountedPrice = 0;
+  isCustomerLookup = false;
   selectedCustomer = null;
   @ViewChild('customerNameInput') customerNameInput: ElementRef<HTMLInputElement>;
   @ViewChild('customerNameAuto') customerNameAuto: MatAutocomplete;
@@ -64,18 +66,18 @@ export class NewOrderComponent implements OnInit {
     private snackBar: MatSnackBar,
     private customerDataProvider: CustomersDataProviderService,
     private productsDataprovider: ProductsDataProviderService,
+    private currencyApi: CurrencyApiService, 
     private nominatim: NominatimService) {
 
   }
 
   ngOnInit() {
-    this.activatedRoute.data.subscribe((res) => {
-      this.currencies = res.cres;
+    this.currencyApi.fetchMainCurrencies().subscribe(currencies=>{
+      this.currencies = currencies;
       this.currency = this.currencies.find(item => {
         return item.id === 'USD';
       });
-      this.shipping = res.sres;
-    });
+    })
 
     this.ordersCollection = this.afs.collection<IOrder>('orders');
     this.orders = this.ordersCollection.valueChanges();
@@ -124,7 +126,8 @@ export class NewOrderComponent implements OnInit {
         isExport: ['']
       }),
       items: this.fb.array([]),
-      comments: ['']
+      comments: [''],
+      tags: []
     });
 
     this.orderForm.get('shipping').valueChanges.subscribe((shipping) => {
@@ -162,7 +165,9 @@ export class NewOrderComponent implements OnInit {
 
     this.filterCustomerInput.valueChanges.subscribe((query) => {
       if (typeof query === 'string') {
-        this.customerFilter.next(query);
+        if (this.isCustomerLookup) {
+          this.customerFilter.next(query);
+        }
         (<FormGroup>this.orderForm.get('customer')).patchValue({
           name: query
         });
@@ -174,6 +179,10 @@ export class NewOrderComponent implements OnInit {
         this.productsFilter.next(query);
       }
     });
+  }
+  
+  onCustomerLookupToggle() {
+    this.isCustomerLookup = !this.isCustomerLookup;
   }
 
   onCustomerSelect($event: MatAutocompleteSelectedEvent) {
@@ -264,6 +273,11 @@ export class NewOrderComponent implements OnInit {
     }
   }
 
+  getCurrencyName(){
+    const currency = this.getCurrency();
+    return currency ? currency.id : 'USD';
+  }
+
   recalculateShipping(isShipping?) {
     this.orderForm.patchValue({
       shipping: this.getShippingPrice()
@@ -310,11 +324,12 @@ export class NewOrderComponent implements OnInit {
   recalculateItems() {
     const items = <FormArray>this.orderForm.controls['items'];
     for (const item of items.controls) {
+      const quantity = item.get('quantity').value;
       this.afs.doc<IProduct>(`products/${item.value.id}`).valueChanges().subscribe(product => {
         const price = this.calculateProductPrice(product);
         item.patchValue({
           price: price,
-          discountedPrice: price
+          discountedPrice: price * Number(quantity)
         });
       });
     }
@@ -336,9 +351,10 @@ export class NewOrderComponent implements OnInit {
   }
 
   onSetOrderComments() {
-    this.openCommentsPanel(this.orderForm).subscribe((comments) => {
+    this.openCommentsPanel(this.orderForm).subscribe((data) => {
       this.orderForm.patchValue({
-        comments: comments
+        comments: data.comments,
+        tags: data.tags
       });
     });
   }
@@ -374,6 +390,10 @@ export class NewOrderComponent implements OnInit {
       id: [product.id],
       name: [product.name],
       price: [price],
+      width: [product.width],
+      height: [product.height],
+      length: [product.length],
+      weight: [product.weight],
       discountedPrice: [price],
       discount: [0],
       isEditDiscount: [false],
@@ -385,8 +405,12 @@ export class NewOrderComponent implements OnInit {
     formGroup.get('discountedPrice').valueChanges.subscribe((value) => {
       value = value || 0;
       const currentPrice = this.calculateProductPrice(product);
+      let discount = 0;
+      if (currentPrice) {
+        discount = ((currentPrice - value) / currentPrice) * 100;
+      }
       formGroup.patchValue({
-        discount: ((currentPrice - value) / currentPrice) * 100
+        discount: discount
       });
       if (value === 0) {
         formGroup.patchValue({
@@ -396,11 +420,12 @@ export class NewOrderComponent implements OnInit {
     });
 
     formGroup.get('quantity').valueChanges.subscribe((quantity) => {
-      const newPrice = this.calculateProductPrice(product);
+      console.log(quantity);
+      const currentPrice = formGroup.get('price').value;
       formGroup.patchValue({
-        price: newPrice * Number(quantity),
+        discountedPrice: currentPrice * Number(quantity),
         discount: 0
-      }, { emitEvent: false });
+      });
     });
 
     /* formGroup.get('discount').valueChanges.subscribe((discount) => {
