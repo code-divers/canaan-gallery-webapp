@@ -138,13 +138,15 @@ export class EditOrderComponent implements OnInit {
       this.isOrderLoading.next(false);
     });
 
+    this.productsDataprovider.fetchProducts().subscribe((list) => {
+      console.log(list);
+    });
     this.productsFilter = new BehaviorSubject(null);
     this.products = combineLatest(this.productsFilter).pipe(switchMap(([name]) => {
       if (!name) {
         return of([]);
       }
-      const products = this.productsDataprovider.search(name);
-      return of(products);
+      return this.productsDataprovider.search(name);
     }));
 
     this.filterProductsInput.valueChanges.subscribe((query) => {

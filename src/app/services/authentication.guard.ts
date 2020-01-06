@@ -17,7 +17,10 @@ export class AuthenticationGuard implements CanActivate {
     next: ActivatedRouteSnapshot,
     state: RouterStateSnapshot): Observable<boolean>  {
     return this.authService.user.pipe(
-      map(user => user != null),
+      map(user => {
+        console.log('user', user.toJSON())
+        return user != null;
+      }),
       take(1),
       tap(allowed => {
         console.log('allowed:', allowed);

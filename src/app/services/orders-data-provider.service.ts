@@ -19,9 +19,14 @@ export class OrdersDataProviderService {
   constructor(
     private readonly afs: AngularFirestore,
     private fns: AngularFireFunctions) {
-      this.fetchOrders().subscribe((list) => {
-        this.applyFuse(list);
-      });
+  }
+
+  cacheFuze() {
+    const ordersObserver = this.fetchOrders();
+    ordersObserver.subscribe((list) => {
+      this.applyFuse(list);
+    });
+    return ordersObserver;
   }
 
   fetchOrders(query?) {
@@ -35,10 +40,12 @@ export class OrdersDataProviderService {
         newItem.id = body.payload.doc.id;
         return newItem;
       });
-      this.loadingStatus.next(false);
-      return list.sort( (a: IOrder, b: IOrder) => {
+      list.sort( (a: IOrder, b: IOrder) => {
         return b.created.toDate() - a.created.toDate();
       });
+      this.applyFuse(list);
+      this.loadingStatus.next(false);
+      return list;
     }));
   }
 

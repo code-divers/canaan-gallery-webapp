@@ -10,13 +10,14 @@ export class AuthenticationService {
 	public user: Observable<firebase.User>;
 	public userDetails: firebase.User = null;
 	
-	constructor(private _firebaseAuth: AngularFireAuth, private router: Router) { 
+	constructor(
+		private _firebaseAuth: AngularFireAuth, 
+		private router: Router) {
       this.user = _firebaseAuth.authState;
       this.user.subscribe(
         (user) => {
           if (user) {
-            this.userDetails = user;
-            console.log(this.userDetails);
+			this.userDetails = user;
           } else {
             this.userDetails = null;
           }
@@ -32,6 +33,29 @@ export class AuthenticationService {
 			this._firebaseAuth.auth.signInWithPopup(provider).then(res => {
 				resolve(res);
 			})
+
+			let callback = null;
+			let metadataRef = null;
+			this._firebaseAuth.auth.onAuthStateChanged(user => {
+				// Remove previous listener.
+				if (callback) {
+					metadataRef.off('value', callback);
+				}
+				// On user login add new listener.
+				if (user) {
+					// Check if refresh is required.
+					metadataRef = firebase.database().ref('metadata/' + user.uid + '/refreshTime');
+					callback = (snapshot) => {
+						// Force refresh to pick up the latest custom claims changes.
+						// Note this is always triggered on first call. Further optimization could be
+						// added to avoid the initial trigger when the token is issued and already contains
+						// the latest claims.
+						user.getIdToken(true);
+					};
+					// Subscribe new listener to changes on that node.
+					metadataRef.on('value', callback);
+				}
+			});
 		})
 	}
 

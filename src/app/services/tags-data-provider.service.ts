@@ -15,7 +15,11 @@ export class TagsDataProviderService {
 
   loadingStatus: BehaviorSubject<boolean> = new BehaviorSubject(false);
 
-  constructor(private readonly afs: AngularFirestore) { 
+  constructor(
+    private readonly afs: AngularFirestore) {
+  }
+
+  cacheFuze() {
     this.fetchTags().subscribe((list) => {
       this.applyFuse(list);
     });
@@ -29,6 +33,7 @@ export class TagsDataProviderService {
         newItem.id = body.payload.doc.id;
         return newItem;
       });
+      this.applyFuse(list);
       this.loadingStatus.next(false);
       return list;
     }));

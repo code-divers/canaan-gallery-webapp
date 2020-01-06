@@ -85,22 +85,26 @@ export class NewOrderComponent implements OnInit {
       this.orderLoding = value;
     });
     this.customersCollection = this.afs.collection<IOrder>('customers');
+    this.customerDataProvider.fetchCustomers().subscribe((list) => {
+      console.log(list);
+    });
     this.customerFilter = new BehaviorSubject(null);
     this.customers = combineLatest(this.customerFilter).pipe(switchMap(([name]) => {
       if (!name) {
         return of([]);
       }
-      const list = this.customerDataProvider.search(name);
-      return of(list);
+      return this.customerDataProvider.search(name);
     }));
 
+    this.productsDataprovider.fetchProducts().subscribe((list) => {
+      console.log(list);
+    });
     this.productsFilter = new BehaviorSubject(null);
     this.products = combineLatest(this.productsFilter).pipe(switchMap(([name]) => {
       if (!name) {
         return of([]);
       }
-      const products = this.productsDataprovider.search(name);
-      return of(products);
+      return this.productsDataprovider.search(name);
     }));
 
     this.orderForm = this.fb.group({

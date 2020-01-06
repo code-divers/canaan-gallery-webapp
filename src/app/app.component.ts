@@ -5,8 +5,8 @@ import { PrintService } from './services/print.service';
 import { ProductsDataProviderService } from './services/products-data-provider.service';
 import { CustomersDataProviderService } from './services/customers-data-provider.service';
 import { OrdersDataProviderService } from './services/orders-data-provider.service';
-import { startWith, map } from 'rxjs/operators';
-import { forkJoin, Observable, merge } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { merge } from 'rxjs';
 
 @Component({
   selector: 'app-root',

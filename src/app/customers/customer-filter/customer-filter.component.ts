@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Observable, BehaviorSubject, combineLatest, of } from 'rxjs';
-import { switchMap, catchError, } from 'rxjs/operators';
-import { FormControl, FormArray, FormBuilder, Validators, FormGroup } from '@angular/forms';
+import { switchMap } from 'rxjs/operators';
+import { FormControl } from '@angular/forms';
 import { ICustomer } from '../../order-interface';
 import { CustomersDataProviderService } from '../../services/customers-data-provider.service';
 
@@ -26,8 +26,7 @@ export class CustomerFilterComponent implements OnInit {
       if (!name) {
         return of([]);
       }
-      const list = this.dataProvider.search(name);
-      return of(list);
+      return this.dataProvider.search(name);
     }));
     this.filterCustomerInput.valueChanges.subscribe((query) => {
       if (typeof query === 'string') {

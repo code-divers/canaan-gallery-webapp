@@ -39,8 +39,7 @@ export class CustomerListComponent implements OnInit {
         if (!name) {
           return this.customerDataProviver.fetchCustomers();
         }
-        const list = this.customerDataProviver.search(name);
-        return of(list);
+        return this.customerDataProviver.search(name);
       })
     );
     customers.subscribe((list) => {
