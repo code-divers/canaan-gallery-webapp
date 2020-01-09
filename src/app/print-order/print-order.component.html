@@ -2,7 +2,7 @@
   <div class="head-container">
       <div class="customer-details">
         <h3>SOLD TO:</h3>
-        <div>{{ order.customer.name | titlecase }}</div>
+        <div>{{ order.customer.name | titlecase }} ({{order.customer.id}})</div>
         <div>
           {{ formatAddress(order) }}</div>
         <div>{{ order.customer.country | titlecase }}</div>

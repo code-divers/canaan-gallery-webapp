@@ -117,7 +117,6 @@ export class NewOrderComponent implements OnInit {
       customer: this.fb.group({
         id: [null],
         name: ['', Validators.required],
-        address: [''],
         street: [''],
         house: [''],
         city: [''],
@@ -204,7 +203,6 @@ export class NewOrderComponent implements OnInit {
       customer: {
         id: null,
         name: '',
-        address: '',
         street: '',
         house: '',
         city: '',

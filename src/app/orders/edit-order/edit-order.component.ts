@@ -105,7 +105,6 @@ export class EditOrderComponent implements OnInit {
       customer: this.fb.group({
         id: [null],
         name: [''],
-        address: [''],
         street: [''],
         house: [''],
         city: [''],
