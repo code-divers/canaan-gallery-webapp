@@ -60,6 +60,7 @@
 .item-details {
     width: 20%;
     margin: 0.5em;
+    white-space: pre-wrap;
 }
 
 .studio-details td {
@@ -98,4 +99,8 @@
 
 .tag-name {
     margin-left: 0.2em;
+}
+
+.comments-container {
+    white-space: pre-wrap;
 }

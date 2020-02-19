@@ -19,7 +19,7 @@ const NAME_FROM = 'Canaan Gallery';
 const TEL_FROM = '011-972-4697-4449';
 const EXCEL_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
 const EXCEL_EXTENSION = '.xlsx';
-const ITEM_SHIPMENT_NAME = 'Talit religious art';
+const ITEM_SHIPMENT_NAME = 'Jewish religious art';
 
 @Component({
   selector: 'order-list',
@@ -238,7 +238,7 @@ export class OrderListComponent implements OnInit {
               item = order.items[i]
             }
             
-            row['Contents' + counter] = item ?ITEM_SHIPMENT_NAME : '';
+            row['Contents' + counter] = item ? this.getItemShippingName(item) : '';
             row['Currency' + counter] = item ? order.customer.currency : '';
             row['Value' + counter] = item ? item.discountedPrice : '';
             row['Quantity' + counter] = item ? item.quantity : '';
@@ -270,6 +270,38 @@ export class OrderListComponent implements OnInit {
       measures.grossWeight = measures.grossWeight + Number(item.weight);
     }
     return measures;
+  }
+
+  getItemShippingName(item) {
+    let result = 'Jewish';
+    switch (item.group) {
+      case 'כיפה':
+        result = 'Kipa';
+        break;
+      case 'טלית':
+        result = 'Talit';
+        break;
+      case 'מנורה':
+        result = 'Menorah';
+        break;
+      case 'מזוזה':
+        result = 'Mezuzah';
+        break;
+      case 'חמסה':
+        result = 'Hamsa';
+        break;
+      case 'כיסוי מצה':
+        result = 'Matzah cover';
+        break;
+      case 'כיסוי חלה':
+        result = 'Challa cover';
+        break;
+      case 'צעיף':
+        result = 'Scarf';
+        break;
+    }
+    result = `${result} religious article`;
+    return result;
   }
 
   async markShippedOrders() {
